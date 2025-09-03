@@ -23,7 +23,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
 
       - name: Run PyTest
         run: |
@@ -34,6 +33,15 @@ jobs:
         run: |
           mkdir -p reports/robot
           robot --output reports/robot/output.xml --report reports/robot/report.html --log reports/robot/log.html robot/api_tests.robot
+
+      - name: Run Locust load tests
+        run: |
+          mkdir -p reports/locust
+          locust -f Locust/load_generator.py \
+            --headless \
+            -u 10 -r 2 -t 1m \
+            --host https://prl0fjqceh.execute-api.us-east-1.amazonaws.com
+            --csv reports/locust/results
 
       - name: Upload test reports
         uses: actions/upload-artifact@v4
