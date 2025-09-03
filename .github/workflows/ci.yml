@@ -38,10 +38,11 @@ jobs:
         run: |
           mkdir -p reports/locust
           locust -f Locust/locustfile.py \
-            --headless \
-            -u 10 -r 2 -t 1m \
-            --host https://prl0fjqceh.execute-api.us-east-1.amazonaws.com
-            --csv reports/locust/results
+              --headless \
+              -u 10 -r 2 -t 1m \
+              --host https://prl0fjqceh.execute-api.us-east-1.amazonaws.com \
+              --csv reports/locust/results
+
 
       - name: Upload test reports
         uses: actions/upload-artifact@v4
