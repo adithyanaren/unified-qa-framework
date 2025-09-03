@@ -26,7 +26,17 @@ jobs:
           pip install pytest robotframework locust
 
       - name: Run PyTest
-        run: pytest pytest/ --maxfail=1 --disable-warnings -q
+        run: |
+          mkdir -p reports/pytest
+          pytest pytest/ --maxfail=1 --disable-warnings -q --junitxml=reports/pytest/results.xml
 
       - name: Run Robot Framework tests
-        run: robot robot/api_tests.robot
+        run: |
+          mkdir -p reports/robot
+          robot --output reports/robot/output.xml --report reports/robot/report.html --log reports/robot/log.html robot/api_tests.robot
+
+      - name: Upload test reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-reports
+          path: reports/
