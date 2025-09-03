@@ -1,0 +1,65 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Locust Load Test Dashboard",
+    "tags": ["locust", "load-test", "prometheus"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "type": "timeseries",
+        "title": "Requests per Second",
+        "targets": [
+          {
+            "expr": "rate(locust_requests_total[1m])",
+            "legendFormat": "{{method}} {{endpoint}} {{status}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "type": "timeseries",
+        "title": "Request Latency (p95)",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(locust_request_latency_seconds_bucket[1m])) by (le, method, endpoint))",
+            "legendFormat": "{{method}} {{endpoint}} p95"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "type": "timeseries",
+        "title": "Request Latency (p99)",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(locust_request_latency_seconds_bucket[1m])) by (le, method, endpoint))",
+            "legendFormat": "{{method}} {{endpoint}} p99"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}
+      },
+      {
+        "type": "stat",
+        "title": "Total Requests",
+        "targets": [
+          {
+            "expr": "sum(locust_requests_total)"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 8, "w": 6, "h": 4}
+      },
+      {
+        "type": "stat",
+        "title": "Failures",
+        "targets": [
+          {
+            "expr": "sum(locust_requests_total{status=\"fail\"})"
+          }
+        ],
+        "gridPos": {"x": 18, "y": 8, "w": 6, "h": 4}
+      }
+    ],
+    "schemaVersion": 30,
+    "version": 1
+  }
+}
