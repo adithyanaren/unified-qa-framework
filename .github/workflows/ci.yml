@@ -40,7 +40,7 @@ jobs:
           locust -f Locust/locustfile.py \
               --headless \
               -u 10 -r 2 -t 1m \
-              --host https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev
+              --host https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev \
               --csv reports/locust/results || true
 
 
