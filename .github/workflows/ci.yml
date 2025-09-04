@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test:
+  test-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -43,7 +43,6 @@ jobs:
               --host https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev \
               --csv reports/locust/results || true
 
-
       - name: Upload test reports
         uses: actions/upload-artifact@v4
         with:
@@ -57,20 +56,51 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Deploy Lambda function
+      - name: Deploy Lambda to dev alias
         run: |
           zip -r lambda_function.zip lambda_function.py
           aws lambda update-function-code \
             --function-name helloLambda \
             --zip-file fileb://lambda_function.zip
 
-          # ✅ Wait until the update is complete
+          # ✅ Wait until update is complete
           aws lambda wait function-updated --function-name helloLambda
           
-          # Publish a new version
+          # Publish new version
           VERSION=$(aws lambda publish-version --function-name helloLambda --query Version --output text)
 
-          # Point the "live" alias to the new version
+          # Point "dev" alias to this version
+          aws lambda update-alias \
+            --function-name helloLambda \
+            --name dev \
+            --function-version $VERSION || \
+          aws lambda create-alias \
+            --function-name helloLambda \
+            --name dev \
+            --function-version $VERSION
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Health check on /dev
+        run: |
+          echo "Running health check on /dev alias..."
+          set -e
+          for i in {1..5}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev/hello || true)
+            if [ "$STATUS" -eq 200 ]; then
+              echo "✅ Health check passed on attempt $i"
+              exit 0
+            fi
+            echo "Health check failed (status $STATUS), retrying..."
+            sleep 5
+          done
+          echo "❌ Health check failed after 5 attempts"
+          exit 1
+
+      - name: Promote to live alias
+        if: success()
+        run: |
+          echo "Promoting version $VERSION to live alias..."
           aws lambda update-alias \
             --function-name helloLambda \
             --name live \
