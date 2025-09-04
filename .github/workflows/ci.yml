@@ -72,9 +72,16 @@ jobs:
           aws lambda update-function-code \
             --function-name helloLambda \
             --zip-file fileb://lambda_function.zip
+          
+          # Publish a new version
+          VERSION=$(aws lambda publish-version --function-name helloLambda --query Version --output text)
 
-      - name: Redeploy API Gateway stage
-        run: |
-          aws apigateway create-deployment \
-            --rest-api-id prl0fjqceh \
-            --stage-name dev
+          # Point the "live" alias to the new version
+          aws lambda update-alias \
+            --function-name helloLambda \
+            --name live \
+            --function-version $VERSION || \
+          aws lambda create-alias \
+            --function-name helloLambda \
+            --name live \
+            --function-version $VERSION
