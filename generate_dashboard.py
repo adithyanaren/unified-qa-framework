@@ -55,8 +55,11 @@ if os.path.exists(cw_json):
 # Create Plotly chart for Locust if data available
 locust_chart_html = ""
 if os.path.exists(locust_csv):
-    fig = px.line(df, x="Name", y="Average response time", title="Locust Response Times")
-    locust_chart_html = fig.to_html(full_html=False)
+
+    col_avg_time = next((c for c in df.columns if "average response" in c.lower()), None)
+    if col_avg_time and "Name" in df.columns:
+        fig = px.line(df, x="Name", y=col_avg_time, title="Locust Response Times")
+        locust_chart_html = fig.to_html(full_html=False)
 
 # Load Jinja2 template
 env = Environment(loader=FileSystemLoader("."))
