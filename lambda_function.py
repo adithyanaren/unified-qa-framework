@@ -34,7 +34,7 @@ def lambda_handler(event, context):
         return {
             "statusCode": 200,
             "headers": {**cors_headers, "Content-Type": "application/json"},
-            "body": '{"message": "Hello from your first Lambda!"}'
+            "body": '{"message": "Hello from Lambda v2 - CD test!"}'
         }
     else:
         return {
