@@ -30,13 +30,20 @@ if os.path.exists(pytest_xml):
 # Parse Locust CSV
 if os.path.exists(locust_csv):
     df = pd.read_csv(locust_csv)
-    # Get overall stats if available
-    if "Requests/s" in df.columns:
+
+    # Try to detect request/failure/response columns automatically
+    col_requests = next((c for c in df.columns if "requests" in c.lower()), None)
+    col_failures = next((c for c in df.columns if "failures" in c.lower()), None)
+    col_avg_time = next((c for c in df.columns if "average response" in c.lower()), None)
+
+    if col_requests and col_failures and col_avg_time:
         locust_summary = {
-            "requests": int(df["# requests"].sum()),
-            "failures": int(df["# failures"].sum()),
-            "avg_response_time": float(df["Average response time"].mean())
+            "requests": int(df[col_requests].sum()),
+            "failures": int(df[col_failures].sum()),
+            "avg_response_time": float(df[col_avg_time].mean())
         }
+    else:
+        locust_summary = {"error": f"Unexpected CSV columns: {list(df.columns)}"}
 
 # Parse CloudWatch JSON
 if os.path.exists(cw_json):
