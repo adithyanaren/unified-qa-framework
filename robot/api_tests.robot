@@ -12,4 +12,4 @@ Verify Hello Lambda Response
     Should Be Equal As Integers    ${response.status_code}    200
     ${json}=    Set Variable    ${response.json()}
     Dictionary Should Contain Key    ${json}    message
-    Should Be Equal    ${json["message"]}    Hello from your first Lambda!
+    Should Be Equal    ${json["message"]}    Hello from Lambda v2 - CD test!
