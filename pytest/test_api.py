@@ -32,7 +32,7 @@ def test_lambda_returns_expected_message(base_url, capture_response):
     assert response.status_code == 200
     data = response.json()
     assert "message" in data
-    assert data["message"] == "Hello from your first Lambda!"
+    assert data["message"] == "Hello from Lambda v2 - CD test!"
 
 
 # 2. Negative flow
