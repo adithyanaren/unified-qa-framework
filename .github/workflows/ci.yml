@@ -43,12 +43,6 @@ jobs:
               --host https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev \
               --csv reports/locust/results || true
 
-      - name: Upload test reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports
-          path: reports/
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -121,7 +115,6 @@ jobs:
             echo "✅ Cold starts within acceptable threshold"
           fi
 
-
       - name: Promote to live alias
         if: success()
         run: |
@@ -135,3 +128,8 @@ jobs:
             --name live \
             --function-version $VERSION
 
+      - name: Upload test reports   # ✅ moved to the end
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: reports/
