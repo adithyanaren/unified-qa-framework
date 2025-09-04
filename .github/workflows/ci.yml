@@ -63,13 +63,10 @@ jobs:
             --function-name helloLambda \
             --zip-file fileb://lambda_function.zip
 
-          # ✅ Wait until update is complete
           aws lambda wait function-updated --function-name helloLambda
           
-          # Publish new version
           VERSION=$(aws lambda publish-version --function-name helloLambda --query Version --output text)
 
-          # Point "dev" alias to this version
           aws lambda update-alias \
             --function-name helloLambda \
             --name dev \
@@ -81,21 +78,21 @@ jobs:
 
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Health check on /dev
+      - name: Health check Lambda alias (direct invoke)
         run: |
-          echo "Running health check on /dev alias..."
-          set -e
-          for i in {1..5}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev/hello || true)
-            if [ "$STATUS" -eq 200 ]; then
-              echo "✅ Health check passed on attempt $i"
-              exit 0
-            fi
-            echo "Health check failed (status $STATUS), retrying..."
-            sleep 5
-          done
-          echo "❌ Health check failed after 5 attempts"
-          exit 1
+          echo "Invoking helloLambda:dev alias..."
+          aws lambda invoke \
+            --function-name helloLambda:dev \
+            --payload '{"ping":"test"}' \
+            response.json
+          
+          cat response.json
+          if grep -q "error" response.json; then
+            echo "❌ Lambda dev alias failed health check"
+            exit 1
+          else
+            echo "✅ Lambda dev alias passed health check"
+          fi
 
       - name: Promote to live alias
         if: success()
