@@ -83,6 +83,7 @@ jobs:
           echo "Invoking helloLambda:dev alias..."
           aws lambda invoke \
             --function-name helloLambda:dev \
+            --cli-binary-format raw-in-base64-out \
             --payload '{"ping":"test"}' \
             response.json
           
