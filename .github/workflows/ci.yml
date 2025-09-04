@@ -95,6 +95,33 @@ jobs:
             echo "✅ Lambda dev alias passed health check"
           fi
 
+      - name: Fetch ColdStartCount metric from CloudWatch
+        run: |
+          echo "Fetching ColdStartCount metric..."
+          mkdir -p reports/cloudwatch
+          aws cloudwatch get-metric-statistics \
+            --namespace QAFramework \
+            --metric-name ColdStartCount \
+            --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+            --period 300 \
+            --statistics Sum \
+            > reports/cloudwatch/coldstart.json
+
+          cat reports/cloudwatch/coldstart.json
+
+      - name: Check ColdStartCount threshold
+        run: |
+          COUNT=$(jq -r '.Datapoints[0].Sum // 0' reports/cloudwatch/coldstart.json)
+          echo "ColdStartCount in last 10 minutes: $COUNT"
+          if [ "$COUNT" -gt 2 ]; then
+            echo "❌ Too many cold starts detected ($COUNT)!"
+            exit 1
+          else
+            echo "✅ Cold starts within acceptable threshold"
+          fi
+
+
       - name: Promote to live alias
         if: success()
         run: |
@@ -107,3 +134,4 @@ jobs:
             --function-name helloLambda \
             --name live \
             --function-version $VERSION
+
