@@ -50,28 +50,15 @@ jobs:
           name: test-reports
           path: reports/
 
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
       - name: Deploy Lambda function
         run: |
           zip -r lambda_function.zip lambda_function.py
           aws lambda update-function-code \
             --function-name helloLambda \
             --zip-file fileb://lambda_function.zip
+
+          # ✅ Wait until the update is complete
+          aws lambda wait function-updated --function-name helloLambda
           
           # Publish a new version
           VERSION=$(aws lambda publish-version --function-name helloLambda --query Version --output text)
