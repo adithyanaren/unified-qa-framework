@@ -27,17 +27,20 @@ jobs:
       - name: Run PyTest
         run: |
           mkdir -p reports/pytest
-          pytest pytest/ --maxfail=1 --disable-warnings -q --junitxml=reports/pytest/results.xml
+          pytest src/tests/pytest --maxfail=1 --disable-warnings -q --junitxml=reports/pytest/results.xml
 
       - name: Run Robot Framework tests
         run: |
           mkdir -p reports/robot
-          robot --output reports/robot/output.xml --report reports/robot/report.html --log reports/robot/log.html robot/api_tests.robot
+          robot --output reports/robot/output.xml \
+                --report reports/robot/report.html \
+                --log reports/robot/log.html \
+                src/tests/robot/api_tests.robot
 
       - name: Run Locust load tests
         run: |
           mkdir -p reports/locust
-          locust -f Locust/locustfile.py \
+          locust -f src/tests/locust/locustfile.py \
               --headless \
               -u 10 -r 2 -t 1m \
               --host https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev \
@@ -131,7 +134,6 @@ jobs:
       - name: Install dashboard dependencies
         run: |
           pip install pandas jinja2 plotly
-
 
       - name: Generate unified dashboard
         run: |
