@@ -37,15 +37,15 @@ if os.path.exists(pytest_xml):
     try:
         tree = ET.parse(pytest_xml)
         root = tree.getroot()
+        testsuite = root.find("testsuite")
 
-        # Fix: Pytest counts are inside <testsuite>
-        suite = root.find("testsuite") or root
-        pytest_summary = {
-            "tests": suite.attrib.get("tests", "?"),
-            "failures": suite.attrib.get("failures", "?"),
-            "errors": suite.attrib.get("errors", "?"),
-            "skipped": suite.attrib.get("skipped", "?"),
-        }
+        if testsuite is not None:
+            pytest_summary = {
+                "tests": testsuite.attrib.get("tests", "?"),
+                "failures": testsuite.attrib.get("failures", "?"),
+                "errors": testsuite.attrib.get("errors", "?"),
+                "skipped": testsuite.attrib.get("skipped", "?"),
+            }
 
         # Save to history
         run_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -79,7 +79,8 @@ if os.path.exists(robot_output):
         tree = ET.parse(robot_output)
         root = tree.getroot()
 
-        stat_el = root.find(".//statistics/total/stat")
+        suite = root.find(".//suite")
+        stat_el = root.find("statistics/total/stat")
         if stat_el is not None:
             robot_summary = {
                 "total": stat_el.attrib.get("total", "?"),
@@ -87,7 +88,7 @@ if os.path.exists(robot_output):
                 "fail": stat_el.attrib.get("fail", "?")
             }
 
-        for test in root.findall(".//test"):
+        for test in suite.findall(".//test"):
             status_el = test.find("status")
             robot_details.append({
                 "name": test.attrib.get("name", "Unknown"),
@@ -131,16 +132,18 @@ if os.path.exists(robot_history_file):
 if os.path.exists(locust_csv):
     df = pd.read_csv(locust_csv)
 
-    # Fix: adapt to new Locust CSV column names
-    col_requests = next((c for c in df.columns if "request" in c.lower() and "count" in c.lower()), None)
-    col_failures = next((c for c in df.columns if "fail" in c.lower()), None)
-    col_avg_time = next((c for c in df.columns if "average response" in c.lower()), None)
+    # Handle both new and old Locust CSV formats
+    # Try matching both old and new Locust column names
+    col_requests = next((c for c in df.columns if "request count" in c.lower() or "requests" in c.lower()), None)
+    col_failures = next((c for c in df.columns if "failure count" in c.lower() or c.lower() == "failures"), None)
+    col_avg_time = next(
+        (c for c in df.columns if "average response time" in c.lower() or "avg response time" in c.lower()), None)
 
     if col_requests and col_failures and col_avg_time:
         locust_summary = {
             "requests": int(df[col_requests].sum()),
             "failures": int(df[col_failures].sum()),
-            "avg_response_time": float(df[col_avg_time].mean())
+            "avg_response_time": round(float(df[col_avg_time].mean()), 2)
         }
 
         # Save to history
@@ -155,16 +158,18 @@ if os.path.exists(locust_csv):
             if write_header:
                 writer.writerow(["timestamp", "requests", "failures", "avg_response_time"])
             writer.writerow(row)
+
+        # Graphs
+        if col_avg_time and "Name" in df.columns:
+            fig = px.bar(df, x="Name", y=col_avg_time, title="Locust - Avg Response Time per Endpoint")
+            locust_chart_html = fig.to_html(full_html=False)
+
+        if col_failures and "Name" in df.columns:
+            fig2 = px.bar(df, x="Name", y=col_failures, title="Locust - Failures per Endpoint")
+            locust_chart_html += fig2.to_html(full_html=False)
+
     else:
         locust_summary = {"error": f"Unexpected CSV columns: {list(df.columns)}"}
-
-    if col_avg_time and "Name" in df.columns:
-        fig = px.bar(df, x="Name", y=col_avg_time, title="Locust - Avg Response Time per Endpoint")
-        locust_chart_html = fig.to_html(full_html=False)
-
-    if col_failures and "Name" in df.columns:
-        fig2 = px.bar(df, x="Name", y=col_failures, title="Locust - Failures per Endpoint")
-        locust_chart_html += fig2.to_html(full_html=False)
 
 # Build Locust trend
 if os.path.exists(locust_history_file):
