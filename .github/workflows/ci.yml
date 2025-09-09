@@ -35,7 +35,7 @@ jobs:
           robot --output reports/robot/output.xml \
                 --report reports/robot/report.html \
                 --log reports/robot/log.html \
-                src/tests/robot/api_tests.robot
+                src/tests/Robot/api_tests.robot
 
       - name: Run Locust load tests
         run: |
