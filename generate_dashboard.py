@@ -37,11 +37,14 @@ if os.path.exists(pytest_xml):
     try:
         tree = ET.parse(pytest_xml)
         root = tree.getroot()
+
+        # Fix: Pytest counts are inside <testsuite>
+        suite = root.find("testsuite") or root
         pytest_summary = {
-            "tests": root.attrib.get("tests", root.attrib.get("testsuite", "?")),
-            "failures": root.attrib.get("failures", "?"),
-            "errors": root.attrib.get("errors", "?"),
-            "skipped": root.attrib.get("skipped", "?"),
+            "tests": suite.attrib.get("tests", "?"),
+            "failures": suite.attrib.get("failures", "?"),
+            "errors": suite.attrib.get("errors", "?"),
+            "skipped": suite.attrib.get("skipped", "?"),
         }
 
         # Save to history
@@ -76,8 +79,7 @@ if os.path.exists(robot_output):
         tree = ET.parse(robot_output)
         root = tree.getroot()
 
-        suite = root.find(".//suite")
-        stat_el = root.find("statistics/total/stat")
+        stat_el = root.find(".//statistics/total/stat")
         if stat_el is not None:
             robot_summary = {
                 "total": stat_el.attrib.get("total", "?"),
@@ -85,7 +87,7 @@ if os.path.exists(robot_output):
                 "fail": stat_el.attrib.get("fail", "?")
             }
 
-        for test in suite.findall(".//test"):
+        for test in root.findall(".//test"):
             status_el = test.find("status")
             robot_details.append({
                 "name": test.attrib.get("name", "Unknown"),
@@ -129,8 +131,9 @@ if os.path.exists(robot_history_file):
 if os.path.exists(locust_csv):
     df = pd.read_csv(locust_csv)
 
-    col_requests = next((c for c in df.columns if "request" in c.lower() and "#" in c.lower()), None)
-    col_failures = next((c for c in df.columns if "failure" in c.lower()), None)
+    # Fix: adapt to new Locust CSV column names
+    col_requests = next((c for c in df.columns if "request" in c.lower() and "count" in c.lower()), None)
+    col_failures = next((c for c in df.columns if "fail" in c.lower()), None)
     col_avg_time = next((c for c in df.columns if "average response" in c.lower()), None)
 
     if col_requests and col_failures and col_avg_time:
@@ -159,8 +162,8 @@ if os.path.exists(locust_csv):
         fig = px.bar(df, x="Name", y=col_avg_time, title="Locust - Avg Response Time per Endpoint")
         locust_chart_html = fig.to_html(full_html=False)
 
-    if "Failure Count" in df.columns and "Name" in df.columns:
-        fig2 = px.bar(df, x="Name", y="Failure Count", title="Locust - Failures per Endpoint")
+    if col_failures and "Name" in df.columns:
+        fig2 = px.bar(df, x="Name", y=col_failures, title="Locust - Failures per Endpoint")
         locust_chart_html += fig2.to_html(full_html=False)
 
 # Build Locust trend
@@ -239,11 +242,11 @@ template = env.from_string("""
                 </table>
                 <h3>Trend Over Time</h3>
                 <div>{{ trend_robot|safe }}</div>
+                <h3>Embedded Report</h3>
+                <iframe src="report.html"></iframe>
+                <h3>Embedded Log</h3>
+                <iframe src="log.html"></iframe>
             {% endif %}
-            <h3>Embedded Report</h3>
-            <iframe src="{{ Robot }}"></iframe>
-            <h3>Embedded Log</h3>
-            <iframe src="{{ robot_log }}"></iframe>
         {% else %}
             <p>No Robot report found.</p>
         {% endif %}
@@ -284,8 +287,6 @@ template = env.from_string("""
 # Render HTML
 html_out = template.render(
     pytest=pytest_summary,
-    robot=robot_report if os.path.exists(robot_report) else None,
-    robot_log=robot_log if os.path.exists(robot_log) else None,
     locust=locust_summary,
     locust_chart=locust_chart_html,
     coldstart=coldstart_summary,
@@ -302,4 +303,3 @@ with open("reports/robot/Dashboard.html", "w", encoding="utf-8") as f:
     f.write(html_out)
 
 print("✅ Dashboard generated at reports/robot/Dashboard.html")
-
