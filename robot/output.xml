@@ -1,65 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot generator="Robot 7.3.2 (Python 3.11.13 on linux)" generated="2025-09-09T13:41:13.997608" rpa="false" schemaversion="5">
+<robot generator="Robot 7.3.2 (Python 3.11.13 on linux)" generated="2025-09-09T14:23:57.053423" rpa="false" schemaversion="5">
 <suite id="s1" name="Api Tests" source="/home/runner/work/unified-qa-framework/unified-qa-framework/src/tests/Robot/api_tests.robot">
 <test id="s1-t1" name="Verify Hello Lambda Response" line="7">
 <kw name="Create Session" owner="RequestsLibrary">
-<msg time="2025-09-09T13:41:14.078129" level="INFO">Creating Session using : alias=mysession, url=https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev, headers={},                     cookies={}, auth=None, timeout=None, proxies=None, verify=False,                     debug=0 </msg>
+<msg time="2025-09-09T14:23:57.132394" level="INFO">Creating Session using : alias=mysession, url=https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev, headers={},                     cookies={}, auth=None, timeout=None, proxies=None, verify=False,                     debug=0 </msg>
 <arg>mysession</arg>
 <arg>${API_URL}</arg>
 <doc>Create Session: create a HTTP session to a server</doc>
-<status status="PASS" start="2025-09-09T13:41:14.077950" elapsed="0.000406"/>
+<status status="PASS" start="2025-09-09T14:23:57.132215" elapsed="0.000408"/>
 </kw>
 <kw name="GET On Session" owner="RequestsLibrary">
-<msg time="2025-09-09T13:41:14.236048" level="INFO">GET Request : url=https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev/ 
+<msg time="2025-09-09T14:23:57.876262" level="INFO">GET Request : url=https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev/ 
  path_url=/dev/ 
  headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive'} 
  body=None 
  </msg>
-<msg time="2025-09-09T13:41:14.236197" level="INFO">GET Response : url=https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev/ 
+<msg time="2025-09-09T14:23:57.876407" level="INFO">GET Response : url=https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev/ 
  status=200, reason=OK 
- headers={'Date': 'Tue, 09 Sep 2025 13:41:14 GMT', 'Content-Type': 'application/json', 'Content-Length': '46', 'Connection': 'keep-alive', 'Apigw-Requestid': 'QowzJhewIAMEJMw='} 
+ headers={'Date': 'Tue, 09 Sep 2025 14:23:57 GMT', 'Content-Type': 'application/json', 'Content-Length': '46', 'Connection': 'keep-alive', 'Apigw-Requestid': 'Qo3Doj_vIAMEPew='} 
  body={"message": "Hello from Lambda v2 - CD test!"} 
  </msg>
-<msg time="2025-09-09T13:41:14.236277" level="INFO">/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'prl0fjqceh.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+<msg time="2025-09-09T14:23:57.876479" level="INFO">/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'prl0fjqceh.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
   warnings.warn(</msg>
-<msg time="2025-09-09T13:41:14.236452" level="INFO">${response} = &lt;Response [200]&gt;</msg>
+<msg time="2025-09-09T14:23:57.876632" level="INFO">${response} = &lt;Response [200]&gt;</msg>
 <var>${response}</var>
 <arg>mysession</arg>
 <arg>/</arg>
 <doc>Sends a GET request on a previously created HTTP Session.</doc>
-<status status="PASS" start="2025-09-09T13:41:14.078484" elapsed="0.158017"/>
+<status status="PASS" start="2025-09-09T14:23:57.132749" elapsed="0.743925"/>
 </kw>
 <kw name="Should Be Equal As Integers" owner="BuiltIn">
-<msg time="2025-09-09T13:41:14.237401" level="INFO">Argument types are:
+<msg time="2025-09-09T14:23:57.877695" level="INFO">Argument types are:
 &lt;class 'int'&gt;
 &lt;class 'str'&gt;</msg>
 <arg>${response.status_code}</arg>
 <arg>200</arg>
 <doc>Fails if objects are unequal after converting them to integers.</doc>
-<status status="PASS" start="2025-09-09T13:41:14.236786" elapsed="0.000677"/>
+<status status="PASS" start="2025-09-09T14:23:57.876941" elapsed="0.000812"/>
 </kw>
 <kw name="Set Variable" owner="BuiltIn">
-<msg time="2025-09-09T13:41:14.238038" level="INFO">${json} = {'message': 'Hello from Lambda v2 - CD test!'}</msg>
+<msg time="2025-09-09T14:23:57.878301" level="INFO">${json} = {'message': 'Hello from Lambda v2 - CD test!'}</msg>
 <var>${json}</var>
 <arg>${response.json()}</arg>
 <doc>Returns the given values which can then be assigned to a variables.</doc>
-<status status="PASS" start="2025-09-09T13:41:14.237586" elapsed="0.000477"/>
+<status status="PASS" start="2025-09-09T14:23:57.877862" elapsed="0.000463"/>
 </kw>
 <kw name="Dictionary Should Contain Key" owner="Collections">
 <arg>${json}</arg>
 <arg>message</arg>
 <doc>Fails if ``key`` is not found from ``dictionary``.</doc>
-<status status="PASS" start="2025-09-09T13:41:14.238163" elapsed="0.000154"/>
+<status status="PASS" start="2025-09-09T14:23:57.878415" elapsed="0.000147"/>
 </kw>
 <kw name="Should Be Equal" owner="BuiltIn">
 <arg>${json["message"]}</arg>
 <arg>Hello from Lambda v2 - CD test!</arg>
 <doc>Fails if the given objects are unequal.</doc>
-<status status="PASS" start="2025-09-09T13:41:14.238417" elapsed="0.000404"/>
+<status status="PASS" start="2025-09-09T14:23:57.878658" elapsed="0.000376"/>
 </kw>
-<status status="PASS" start="2025-09-09T13:41:14.077182" elapsed="0.161750"/>
+<status status="PASS" start="2025-09-09T14:23:57.131388" elapsed="0.747776"/>
 </test>
-<status status="PASS" start="2025-09-09T13:41:13.998417" elapsed="0.240951"/>
+<status status="PASS" start="2025-09-09T14:23:57.054345" elapsed="0.825269"/>
 </suite>
 <statistics>
 <total>
