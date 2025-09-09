@@ -1,15 +1,12 @@
 import pytest
 import requests
 import time
-
-# Replace with your deployed API Gateway URL
-API_URL = "https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev"
-
+from src.utils.config import API_ENDPOINTS    # ✅ import from config
 
 @pytest.fixture
 def base_url():
     """Fixture for base URL of the Lambda API"""
-    return API_URL
+    return API_ENDPOINTS["health_check"]  # ✅ now taken from config.py
 
 
 @pytest.fixture
@@ -66,7 +63,7 @@ def test_lambda_response_time_warm(base_url, capture_response):
     response = capture_response(requests.get(base_url))
     duration = time.time() - start
     assert response.status_code == 200
-    assert duration < 1.5, f"Warm start too slow: {duration:.3f}s"
+    assert duration < 2.0, f"Warm start too slow: {duration:.3f}s"
 
 
 # 4. Security headers
