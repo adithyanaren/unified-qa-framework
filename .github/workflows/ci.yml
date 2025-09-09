@@ -27,9 +27,7 @@ jobs:
       - name: Run PyTest
         run: |
           mkdir -p reports/pytest
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/src
-          pytest src/tests/pytest/ --maxfail=1 --disable-warnings \
-            --junitxml=reports/pytest/results.xml
+          PYTHONPATH=. pytest src/tests/pytest --maxfail=1 --disable-warnings -q --junitxml=reports/pytest/results.xml
 
       - name: Run Robot Framework tests
         run: |
@@ -37,7 +35,7 @@ jobs:
           robot --output reports/robot/output.xml \
                 --report reports/robot/report.html \
                 --log reports/robot/log.html \
-                src/tests/robot/api_tests.robot
+                src/tests/Robot/api_tests.robot
 
       - name: Run Locust load tests
         run: |
@@ -133,11 +131,15 @@ jobs:
             --name live \
             --function-version $VERSION
 
+      - name: Install dashboard dependencies
+        run: |
+          pip install pandas jinja2 plotly
+
       - name: Generate unified dashboard
         run: |
           python generate_dashboard.py
 
-      - name: Upload test reports (with Dashboard)
+      - name: Upload test reports   # ✅ moved to the end
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
