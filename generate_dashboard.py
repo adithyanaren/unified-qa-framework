@@ -9,9 +9,9 @@ from datetime import datetime
 
 # Paths
 pytest_xml = "reports/pytest/results.xml"
-robot_report = "reports/Robot/report.html"
-robot_log = "reports/Robot/log.html"
-robot_output = "reports/Robot/output.xml"
+robot_report = "reports/robot/report.html"
+robot_log = "reports/robot/log.html"
+robot_output = "reports/robot/output.xml"
 locust_csv = "reports/locust/results_stats.csv"
 cw_json = "reports/cloudwatch/coldstart.json"
 
@@ -297,8 +297,9 @@ html_out = template.render(
     trend_locust=trend_locust_html
 )
 
-os.makedirs("src/tests/Robot", exist_ok=True)
-with open("src/tests/Robot/Dashboard.html", "w", encoding="utf-8") as f:
+os.makedirs("reports/robot", exist_ok=True)
+with open("reports/robot/Dashboard.html", "w", encoding="utf-8") as f:
     f.write(html_out)
 
-print("✅ Dashboard generated at reports/Robot/Dashboard.html")
+print("✅ Dashboard generated at reports/robot/Dashboard.html")
+
