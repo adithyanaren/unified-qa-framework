@@ -28,3 +28,6 @@ LOCUST_SETTINGS = {
     "spawn_rate": 5,
     "run_time": "1m"  # 1 minute, format: "10s", "5m", "1h"
 }
+
+# For Robot Framework compatibility
+API_URL = API_ENDPOINTS["health_check"]

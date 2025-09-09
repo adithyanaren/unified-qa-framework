@@ -1,9 +1,7 @@
 *** Settings ***
 Library    RequestsLibrary
 Library    Collections
-
-*** Variables ***
-${API_URL}    https://prl0fjqceh.execute-api.us-east-1.amazonaws.com
+Variables  ../../utils/config.py
 
 *** Test Cases ***
 Verify Hello Lambda Response
