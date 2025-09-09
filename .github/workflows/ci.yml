@@ -139,8 +139,8 @@ jobs:
         run: |
           python generate_dashboard.py
 
-      - name: Upload test reports   # ✅ moved to the end
-        uses: actions/upload-artifact@v4
+      - name: Deploy QA Dashboard to GitHub Pages   # ✅ new step
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          name: test-reports
-          path: reports/
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./reports
