@@ -27,7 +27,7 @@ jobs:
       - name: Run PyTest
         run: |
           mkdir -p reports/pytest
-          pytest src/tests/pytest --maxfail=1 --disable-warnings -q --junitxml=reports/pytest/results.xml
+          PYTHONPATH=. pytest src/tests/pytest --maxfail=1 --disable-warnings -q --junitxml=reports/pytest/results.xml
 
       - name: Run Robot Framework tests
         run: |
