@@ -248,9 +248,9 @@ template = env.from_string("""
                 <h3>Trend Over Time</h3>
                 <div>{{ trend_robot|safe }}</div>
                 <h3>Embedded Report</h3>
-                <iframe src="report.html"></iframe>
+                <iframe src="unified-qa-framework/report.html"></iframe>
                 <h3>Embedded Log</h3>
-                <iframe src="log.html"></iframe>
+                <iframe src="unified-qa-framework/log.html"></iframe>
             {% endif %}
         {% else %}
             <p>No Robot report found.</p>
