@@ -46,7 +46,7 @@ jobs:
           locust -f src/tests/locust/locustfile.py \
               --headless \
               -u 10 -r 2 -t 1m \
-              --host https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev \
+              --host https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev
               --csv reports/locust/results || true
 
       - name: Configure AWS credentials
@@ -58,21 +58,21 @@ jobs:
 
       - name: Deploy Lambda to dev alias
         run: |
-          zip -r lambda_function.zip lambda_function.py
+          zip -r lambda_crud.zip lambda_crud/lambda_crud_function.py
           aws lambda update-function-code \
-            --function-name helloLambda \
-            --zip-file fileb://lambda_function.zip
-
-          aws lambda wait function-updated --function-name helloLambda
+            --function-name QAFrameworkCRUD \
+            --zip-file fileb://lambda_crud.zip  
           
-          VERSION=$(aws lambda publish-version --function-name helloLambda --query Version --output text)
+          aws lambda wait function-updated --function-name QAFrameworkCRUD
+          
+          VERSION=$(aws lambda publish-version --function-name QAFrameworkCRUD --query Version --output text)
 
           aws lambda update-alias \
-            --function-name helloLambda \
+            --function-name QAFrameworkCRUD \
             --name dev \
             --function-version $VERSION || \
           aws lambda create-alias \
-            --function-name helloLambda \
+            --function-name QAFrameworkCRUD \
             --name dev \
             --function-version $VERSION
 
@@ -80,9 +80,9 @@ jobs:
 
       - name: Health check Lambda alias (direct invoke)
         run: |
-          echo "Invoking helloLambda:dev alias..."
+          echo "Invoking QAFrameworkCRUD:dev alias..."
           aws lambda invoke \
-            --function-name helloLambda:dev \
+            --function-name QAFrameworkCRUD:dev \
             --cli-binary-format raw-in-base64-out \
             --payload '{"ping":"test"}' \
             response.json

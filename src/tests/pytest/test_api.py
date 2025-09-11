@@ -84,3 +84,42 @@ def test_lambda_idempotency(base_url, capture_response):
     first = capture_response(requests.get(base_url)).json()
     second = capture_response(requests.get(base_url)).json()
     assert first == second
+
+# ------------------------------
+# CRUD API Tests
+# ------------------------------
+
+def test_create_item(capture_response):
+    url = "https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/items"
+    payload = {"id": "pytest123", "name": "Test Item"}
+    response = capture_response(requests.post(url, json=payload))
+    assert response.status_code == 200
+    body = response.json()
+    assert body["item"]["id"] == "pytest123"
+    assert body["item"]["name"] == "Test Item"
+
+
+def test_get_item(capture_response):
+    url = "https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/items?id=pytest123"
+    response = capture_response(requests.get(url))
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == "pytest123"
+    assert body["name"] == "Test Item"
+
+
+def test_update_item(capture_response):
+    url = "https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/items"
+    payload = {"id": "pytest123", "name": "Updated Item"}
+    response = capture_response(requests.put(url, json=payload))
+    assert response.status_code == 200
+    body = response.json()
+    assert body["item"]["name"] == "Updated Item"
+
+
+def test_delete_item(capture_response):
+    url = "https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/items?id=pytest123"
+    response = capture_response(requests.delete(url))
+    assert response.status_code == 200
+    body = response.json()
+    assert "deleted" in body["message"].lower()
