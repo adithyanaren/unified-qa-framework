@@ -1,32 +1,27 @@
-# src/utils/config.py
-
 # ---------- AWS General ----------
-AWS_REGION = "us-east-1"   # change if your Lambda is deployed elsewhere
+AWS_REGION = "us-east-1"
 
 # ---------- Lambda Functions ----------
 LAMBDA_FUNCTIONS = {
-    "hello_world": "my-hello-world-func",
-    "heavy_task": "my-heavy-task-func"
+    "crud": "QAFrameworkCRUD"
 }
 
 # ---------- API Gateway ----------
 API_ENDPOINTS = {
-    "health_check": "https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev",
-    "process_data": "https://prl0fjqceh.execute-api.us-east-1.amazonaws.com/dev/process"
+    "health_check": "https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev",
+    "items": "https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/items"
 }
-
 
 # ---------- CloudWatch ----------
 LOG_GROUPS = {
-    "hello_world": "/aws/lambda/my-hello-world-func",
-    "heavy_task": "/aws/lambda/my-heavy-task-func"
+    "crud": "/aws/lambda/QAFrameworkCRUD"
 }
 
 # ---------- Load Testing ----------
 LOCUST_SETTINGS = {
-    "users": 50,
-    "spawn_rate": 5,
-    "run_time": "1m"  # 1 minute, format: "10s", "5m", "1h"
+    "users": 10,
+    "spawn_rate": 2,
+    "run_time": "1m"
 }
 
 # For Robot Framework compatibility
