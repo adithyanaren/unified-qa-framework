@@ -142,8 +142,12 @@ jobs:
         run: |
           python generate_dashboard.py
 
-      - name: Copy dashboard to index.html   # 👈 add this here
-        run: cp reports/robot/Dashboard.html reports/index.html
+      - name: Copy dashboard and reports
+        run: |
+          cp reports/robot/Dashboard.html reports/index.html
+          cp reports/robot/report.html reports/report.html
+          cp reports/robot/log.html reports/log.html
+
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
