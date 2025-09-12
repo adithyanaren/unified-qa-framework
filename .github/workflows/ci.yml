@@ -49,7 +49,6 @@ jobs:
               --host https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev \
               --csv reports/locust/results
 
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -63,7 +62,7 @@ jobs:
           aws lambda update-function-code \
             --function-name QAFrameworkCRUD \
             --zip-file fileb://lambda_crud.zip  
-          
+
           aws lambda wait function-updated --function-name QAFrameworkCRUD
           
           VERSION=$(aws lambda publish-version --function-name QAFrameworkCRUD --query Version --output text)
@@ -95,6 +94,7 @@ jobs:
           else
             echo "✅ Lambda dev alias passed health check"
           fi
+
       - name: Send test request to API Gateway
         run: |
           echo "Sending test request to API Gateway..."
@@ -103,59 +103,69 @@ jobs:
             -d '{"ping":"ci-test"}'
           cat response_api.json
 
-
-      - name: Fetch ColdStartCount metric from CloudWatch
+      - name: Check ColdStartCount threshold with retry
         run: |
-          echo "Fetching ColdStartCount metric..."
-          mkdir -p reports/cloudwatch
-          aws cloudwatch get-metric-statistics \
-            --namespace QAFramework/Serverless \
-            --metric-name ColdStartCount \
-            --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
-            --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-            --period 300 \
-            --statistics Sum \
-            > reports/cloudwatch/coldstart.json
+          ATTEMPTS=0
+          COUNT=0
+          while [ $ATTEMPTS -lt 3 ]; do
+            echo "Fetching ColdStartCount (attempt $((ATTEMPTS+1)))..."
+            aws cloudwatch get-metric-statistics \
+              --namespace QAFramework/Serverless \
+              --metric-name ColdStartCount \
+              --dimensions Name=FunctionName,Value=helloLambda Name=Stage,Value=dev \
+              --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+              --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+              --period 300 \
+              --statistics Sum \
+              > reports/cloudwatch/coldstart.json
 
-          cat reports/cloudwatch/coldstart.json
+            COUNT=$(jq -r '.Datapoints[0].Sum // 0' reports/cloudwatch/coldstart.json)
+            echo "ColdStartCount in last 10 minutes: $COUNT"
 
-      - name: Check ColdStartCount threshold
+            if [ "$COUNT" -le 2 ]; then
+              echo "✅ Cold starts within acceptable threshold"
+              exit 0
+            fi
+
+            echo "⏳ Too many cold starts, retrying in 30s..."
+            sleep 30
+            ATTEMPTS=$((ATTEMPTS+1))
+          done
+
+          echo "❌ Too many cold starts after retries!"
+          exit 1
+
+      - name: Check RequestsProcessed threshold with retry
         run: |
-          COUNT=$(jq -r '.Datapoints[0].Sum // 0' reports/cloudwatch/coldstart.json)
-          echo "ColdStartCount in last 10 minutes: $COUNT"
-          if [ "$COUNT" -gt 2 ]; then
-            echo "❌ Too many cold starts detected ($COUNT)!"
-            exit 1
-          else
-            echo "✅ Cold starts within acceptable threshold"
-          fi
+          ATTEMPTS=0
+          COUNT=0
+          while [ $ATTEMPTS -lt 3 ]; do
+            echo "Fetching RequestsProcessed (attempt $((ATTEMPTS+1)))..."
+            aws cloudwatch get-metric-statistics \
+              --namespace QAFramework/Serverless \
+              --metric-name RequestsProcessed \
+              --dimensions Name=FunctionName,Value=helloLambda Name=Stage,Value=dev \
+              --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+              --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+              --period 300 \
+              --statistics Sum \
+              > reports/cloudwatch/requests.json
 
-      - name: Fetch RequestsProcessed metric from CloudWatch
-        run: |
-          echo "Fetching RequestsProcessed metric..."
-          mkdir -p reports/cloudwatch
-          aws cloudwatch get-metric-statistics \
-            --namespace QAFramework/Serverless \
-            --metric-name RequestsProcessed \
-            --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
-            --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-            --period 300 \
-            --statistics Sum \
-            > reports/cloudwatch/requests.json
+            COUNT=$(jq -r '.Datapoints[0].Sum // 0' reports/cloudwatch/requests.json)
+            echo "RequestsProcessed in last 10 minutes: $COUNT"
 
-          cat reports/cloudwatch/requests.json
+            if [ "$COUNT" -ge 1 ]; then
+              echo "✅ Requests processed successfully"
+              exit 0
+            fi
 
-      - name: Check RequestsProcessed threshold
-        run: |
-          COUNT=$(jq -r '.Datapoints[0].Sum // 0' reports/cloudwatch/requests.json)
-          echo "RequestsProcessed in last 10 minutes: $COUNT"
-          if [ "$COUNT" -lt 1 ]; then
-            echo "❌ No requests processed! Failing pipeline."
-            exit 1
-          else
-            echo "✅ Requests processed successfully"
-          fi
+            echo "⏳ No requests yet, retrying in 30s..."
+            sleep 30
+            ATTEMPTS=$((ATTEMPTS+1))
+          done
 
+          echo "❌ No requests processed after retries!"
+          exit 1
 
       - name: Promote to live alias
         if: success()
@@ -170,7 +180,6 @@ jobs:
             --name live \
             --function-version $VERSION
 
-
       - name: Install dashboard dependencies
         run: |
           pip install pandas jinja2 plotly
@@ -184,7 +193,6 @@ jobs:
           cp reports/robot/Dashboard.html reports/index.html
           cp reports/robot/report.html reports/report.html
           cp reports/robot/log.html reports/log.html
-
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
