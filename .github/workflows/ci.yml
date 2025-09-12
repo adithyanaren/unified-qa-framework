@@ -95,6 +95,14 @@ jobs:
           else
             echo "✅ Lambda dev alias passed health check"
           fi
+      - name: Send test request to API Gateway
+        run: |
+          echo "Sending test request to API Gateway..."
+          curl -s -o response_api.json -w "%{http_code}" https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/ \
+            -H "Content-Type: application/json" \
+            -d '{"ping":"ci-test"}'
+          cat response_api.json
+
 
       - name: Fetch ColdStartCount metric from CloudWatch
         run: |
