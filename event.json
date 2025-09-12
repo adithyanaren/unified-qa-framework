@@ -1,4 +1,26 @@
 {
-  "httpMethod": "GET"
+  "root": {
+    "httpMethod": "GET",
+    "path": "/dev/"
+  },
+  "create": {
+    "httpMethod": "POST",
+    "path": "/dev/items",
+    "body": "{\"id\": \"localtest1\", \"name\": \"Test Item\"}"
+  },
+  "read": {
+    "httpMethod": "GET",
+    "path": "/dev/items",
+    "queryStringParameters": { "id": "localtest1" }
+  },
+  "update": {
+    "httpMethod": "PUT",
+    "path": "/dev/items",
+    "body": "{\"id\": \"localtest1\", \"name\": \"Updated Test Item\"}"
+  },
+  "delete": {
+    "httpMethod": "DELETE",
+    "path": "/dev/items",
+    "queryStringParameters": { "id": "localtest1" }
+  }
 }
-

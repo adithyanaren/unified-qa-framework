@@ -1,0 +1,1 @@
+{"httpMethod":"POST","path":"/dev/items","body":"{\"id\": \"localtest1\", \"name\": \"Test Item\"}"}

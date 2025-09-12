@@ -101,7 +101,7 @@ jobs:
           echo "Fetching ColdStartCount metric..."
           mkdir -p reports/cloudwatch
           aws cloudwatch get-metric-statistics \
-            --namespace QAFramework \
+            --namespace QAFramework/Serverless \
             --metric-name ColdStartCount \
             --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
             --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
@@ -121,6 +121,21 @@ jobs:
           else
             echo "✅ Cold starts within acceptable threshold"
           fi
+
+      - name: Fetch RequestsProcessed metric from CloudWatch
+        run: |
+          echo "Fetching RequestsProcessed metric..."
+          mkdir -p reports/cloudwatch
+          aws cloudwatch get-metric-statistics \
+            --namespace QAFramework/Serverless \
+            --metric-name RequestsProcessed \
+            --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+            --period 300 \
+            --statistics Sum \
+            > reports/cloudwatch/requests.json
+
+          cat reports/cloudwatch/requests.json
 
       - name: Promote to live alias
         if: success()

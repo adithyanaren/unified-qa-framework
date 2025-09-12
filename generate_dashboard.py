@@ -32,6 +32,7 @@ trend_robot_html = ""
 trend_pytest_html = ""
 trend_locust_html = ""
 
+
 # --- PyTest ---
 if os.path.exists(pytest_xml):
     try:
@@ -178,13 +179,78 @@ if os.path.exists(locust_history_file):
         fig_trend = px.line(df_hist, x="timestamp", y=["avg_response_time", "failures"], markers=True,
                             title="Locust Trend (Avg Response Time & Failures over time)")
         trend_locust_html = fig_trend.to_html(full_html=False)
-
 # --- CloudWatch ---
+cw_history_processed = "reports/cw_processed_history.csv"
+cw_history_coldstart = "reports/cw_coldstart_history.csv"
+trend_cw_processed_html = ""
+trend_cw_cold_html = ""
+
 if os.path.exists(cw_json):
     with open(cw_json) as f:
         data = json.load(f)
+
     if data.get("Datapoints"):
-        coldstart_summary = data["Datapoints"][0]
+        # Sort by timestamp, take latest
+        datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
+        latest = datapoints[-1]
+
+        # ColdStartCount summary
+        coldstart_summary = {
+            "Sum": latest.get("Sum", 0),
+            "Timestamp": latest.get("Timestamp")
+        }
+
+        # Save ColdStart history
+        run_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        row_cold = [run_time, latest.get("Sum", 0)]
+        write_header = not os.path.exists(cw_history_coldstart)
+        with open(cw_history_coldstart, "a", newline="") as f:
+            writer = csv.writer(f)
+            if write_header:
+                writer.writerow(["timestamp", "ColdStartCount"])
+            writer.writerow(row_cold)
+
+# Build ColdStart trend
+if os.path.exists(cw_history_coldstart):
+    df_hist = pd.read_csv(cw_history_coldstart)
+    if not df_hist.empty:
+        fig_cold = px.line(df_hist, x="timestamp", y="ColdStartCount", markers=True,
+                           title="CloudWatch - ColdStartCount over time")
+        trend_cw_cold_html = fig_cold.to_html(full_html=False)
+
+# --- RequestsProcessed (separate JSON export expected) ---
+cw_processed_json = "reports/cloudwatch/requests.json"
+if os.path.exists(cw_processed_json):
+    with open(cw_processed_json) as f:
+        data = json.load(f)
+    if data.get("Datapoints"):
+        datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
+        latest = datapoints[-1]
+
+        requests_summary = {
+            "Sum": latest.get("Sum", 0),
+            "Timestamp": latest.get("Timestamp")
+        }
+
+        run_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        row_proc = [run_time, latest.get("Sum", 0)]
+        write_header = not os.path.exists(cw_history_processed)
+        with open(cw_history_processed, "a", newline="") as f:
+            writer = csv.writer(f)
+            if write_header:
+                writer.writerow(["timestamp", "RequestsProcessed"])
+            writer.writerow(row_proc)
+
+        # Build RequestsProcessed trend
+        if os.path.exists(cw_history_processed):
+            df_hist = pd.read_csv(cw_history_processed)
+            if not df_hist.empty:
+                fig_proc = px.line(df_hist, x="timestamp", y="RequestsProcessed", markers=True,
+                                   title="CloudWatch - RequestsProcessed over time")
+                trend_cw_processed_html = fig_proc.to_html(full_html=False)
+else:
+    requests_summary = {}
+
 
 # Template
 env = Environment(loader=FileSystemLoader("."))
@@ -276,14 +342,27 @@ template = env.from_string("""
     </div>
 
     <div class="section">
-        <h2>CloudWatch - Cold Starts</h2>
+        <h2>CloudWatch - Metrics</h2>
+    
+        <h3>ColdStartCount</h3>
         {% if coldstart %}
             <div class="metric">ColdStartCount: {{ coldstart.Sum }}</div>
             <div class="metric">Timestamp: {{ coldstart.Timestamp }}</div>
+            <div>{{ trend_cw_cold|safe }}</div>
         {% else %}
-            <p>No CloudWatch metrics found.</p>
+            <p>No ColdStartCount metrics found.</p>
+        {% endif %}
+    
+        <h3>RequestsProcessed</h3>
+        {% if requests %}
+            <div class="metric">RequestsProcessed: {{ requests.Sum }}</div>
+            <div class="metric">Timestamp: {{ requests.Timestamp }}</div>
+            <div>{{ trend_cw_processed|safe }}</div>
+        {% else %}
+            <p>No RequestsProcessed metrics found.</p>
         {% endif %}
     </div>
+    >
 
 </body>
 </html>
@@ -295,12 +374,15 @@ html_out = template.render(
     locust=locust_summary,
     locust_chart=locust_chart_html,
     coldstart=coldstart_summary,
+    requests=requests_summary,
     robot_summary=robot_summary,
     robot_details=robot_details,
     robot_chart=robot_chart_html,
     trend_robot=trend_robot_html,
     trend_pytest=trend_pytest_html,
-    trend_locust=trend_locust_html
+    trend_locust=trend_locust_html,
+    trend_cw_cold=trend_cw_cold_html,
+    trend_cw_processed=trend_cw_processed_html
 )
 
 os.makedirs("reports/robot", exist_ok=True)
