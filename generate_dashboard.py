@@ -219,7 +219,10 @@ if os.path.exists(cw_history_coldstart):
         trend_cw_cold_html = fig_cold.to_html(full_html=False)
 
 # --- RequestsProcessed (separate JSON export expected) ---
+# --- RequestsProcessed (separate JSON export expected) ---
 cw_processed_json = "reports/cloudwatch/requests.json"
+requests_summary = {}   # <-- add this line so it always exists
+
 if os.path.exists(cw_processed_json):
     with open(cw_processed_json) as f:
         data = json.load(f)
@@ -248,6 +251,7 @@ if os.path.exists(cw_processed_json):
                 fig_proc = px.line(df_hist, x="timestamp", y="RequestsProcessed", markers=True,
                                    title="CloudWatch - RequestsProcessed over time")
                 trend_cw_processed_html = fig_proc.to_html(full_html=False)
+
 else:
     requests_summary = {}
 
