@@ -41,13 +41,16 @@ jobs:
                 src/tests/Robot/api_tests.robot
 
       - name: Run Locust load tests
+        env:
+          NEGATIVE_TESTS: "false"
         run: |
           mkdir -p reports/locust
           locust -f src/tests/locust/locustfile.py \
               --headless \
               -u 10 -r 2 -t 1m \
-              --host https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev
+              --host https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev \
               --csv reports/locust/results || true
+
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
