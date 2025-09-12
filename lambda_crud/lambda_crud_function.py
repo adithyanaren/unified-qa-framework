@@ -9,37 +9,54 @@ logger.setLevel(logging.INFO)
 # CloudWatch client
 cloudwatch = boto3.client("cloudwatch")
 NAMESPACE = "QAFramework/Serverless"
-METRIC_NAME = "RequestsProcessed"
 STAGE = os.getenv("STAGE", "dev")
 
 # DynamoDB table
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(os.getenv("TABLE_NAME", "ItemsTable"))
 
-def publish_metric():
+# Global flag to detect first invocation (cold start)
+IS_COLD_START = True
+
+def publish_metric(metric_name):
+    """Publish a custom CloudWatch metric with Stage and FunctionName dimensions."""
     try:
         cloudwatch.put_metric_data(
             Namespace=NAMESPACE,
             MetricData=[
                 {
-                    "MetricName": METRIC_NAME,
-                    "Dimensions": [{"Name": "Stage", "Value": STAGE}],
+                    "MetricName": metric_name,
+                    "Dimensions": [
+                        {"Name": "FunctionName", "Value": "helloLambda"},
+                        {"Name": "Stage", "Value": STAGE}
+                    ],
                     "Value": 1,
                     "Unit": "Count"
                 }
             ]
         )
+        logger.info(f"Published metric: {metric_name}=1")
     except Exception as e:
-        logger.error(f"Failed to publish metric: {e}")
+        logger.error(f"Failed to publish {metric_name}: {e}")
 
 def lambda_handler(event, context):
+    global IS_COLD_START
+
     logger.info("Received event: %s", json.dumps(event))
 
+    # Cold start detection (fires once per container lifecycle)
+    if IS_COLD_START:
+        publish_metric("ColdStartCount")
+        IS_COLD_START = False
+
+    # Always track requests
+    publish_metric("RequestsProcessed")
+
     # Detect method + path
-    if "requestContext" in event and "http" in event["requestContext"]:  # v2
+    if "requestContext" in event and "http" in event["requestContext"]:  # HTTP API v2
         method = event["requestContext"]["http"].get("method")
         path = event.get("rawPath", "/")
-    else:  # v1 or test
+    else:  # REST API v1 or test event
         method = event.get("httpMethod")
         path = event.get("path", "/")
 
@@ -53,44 +70,39 @@ def lambda_handler(event, context):
         return {"statusCode": 200, "headers": cors_headers, "body": ""}
 
     try:
-        # Root
+        # Root endpoint
         if path in ["", "/", f"/{STAGE}", f"/{STAGE}/"]:
-            publish_metric()
             return {
                 "statusCode": 200,
                 "headers": {**cors_headers, "Content-Type": "application/json"},
                 "body": '{"message": "Hello from Lambda CRUD API!"}'
             }
 
-        # POST
+        # POST /items
         elif path == f"/{STAGE}/items" and method == "POST":
             body = json.loads(event["body"])
             table.put_item(Item=body)
-            publish_metric()
             return {"statusCode": 200, "headers": cors_headers,
                     "body": json.dumps({"message": "Item created", "item": body})}
 
-        # GET
+        # GET /items?id=123
         elif path == f"/{STAGE}/items" and method == "GET":
             item_id = event["queryStringParameters"]["id"]
             response = table.get_item(Key={"id": item_id})
-            publish_metric()
             return {"statusCode": 200, "headers": cors_headers,
                     "body": json.dumps(response.get("Item", {}))}
 
-        # PUT
+        # PUT /items
         elif path == f"/{STAGE}/items" and method == "PUT":
             body = json.loads(event["body"])
             table.put_item(Item=body)
-            publish_metric()
             return {"statusCode": 200, "headers": cors_headers,
                     "body": json.dumps({"message": "Item updated", "item": body})}
 
-        # DELETE
+        # DELETE /items?id=123
         elif path == f"/{STAGE}/items" and method == "DELETE":
             item_id = event["queryStringParameters"]["id"]
             table.delete_item(Key={"id": item_id})
-            publish_metric()
             return {"statusCode": 200, "headers": cors_headers,
                     "body": json.dumps({"message": f"Item {item_id} deleted"})}
 

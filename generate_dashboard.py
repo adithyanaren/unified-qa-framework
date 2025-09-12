@@ -6,6 +6,9 @@ from jinja2 import Environment, FileSystemLoader
 import plotly.express as px
 import csv
 from datetime import datetime
+import boto3
+import argparse
+from datetime import timedelta
 
 # Paths
 pytest_xml = "reports/pytest/results.xml"
@@ -31,7 +34,6 @@ locust_chart_html = ""
 trend_robot_html = ""
 trend_pytest_html = ""
 trend_locust_html = ""
-
 
 # --- PyTest ---
 if os.path.exists(pytest_xml):
@@ -134,7 +136,6 @@ if os.path.exists(locust_csv):
     df = pd.read_csv(locust_csv)
 
     # Handle both new and old Locust CSV formats
-    # Try matching both old and new Locust column names
     col_requests = next((c for c in df.columns if "request count" in c.lower() or "requests" in c.lower()), None)
     col_failures = next((c for c in df.columns if "failure count" in c.lower() or c.lower() == "failures"), None)
     col_avg_time = next(
@@ -179,22 +180,68 @@ if os.path.exists(locust_history_file):
         fig_trend = px.line(df_hist, x="timestamp", y=["avg_response_time", "failures"], markers=True,
                             title="Locust Trend (Avg Response Time & Failures over time)")
         trend_locust_html = fig_trend.to_html(full_html=False)
+
 # --- CloudWatch ---
 cw_history_processed = "reports/cw_processed_history.csv"
 cw_history_coldstart = "reports/cw_coldstart_history.csv"
 trend_cw_processed_html = ""
 trend_cw_cold_html = ""
 
+# CLI argument parser
+parser = argparse.ArgumentParser()
+parser.add_argument("--refresh", action="store_true",
+                    help="Fetch latest metrics from CloudWatch instead of using cached JSON")
+parser.add_argument("--stage", type=str, default="dev",
+                    help="Stage dimension to filter metrics (default: dev)")
+args, _ = parser.parse_known_args()
+
+cw = boto3.client("cloudwatch")
+
+
+def fetch_metric(namespace, metric_name, outfile, stage=None):
+    """Fetch CloudWatch metric and save JSON locally."""
+    end = datetime.utcnow()
+    start = end - timedelta(hours=6)  # last 6 hours
+
+    dimensions = []
+    if stage:
+        dimensions = [
+            {"Name": "Stage", "Value": stage},
+            {"Name": "FunctionName", "Value": "helloLambda"}
+        ]
+
+    response = cw.get_metric_statistics(
+        Namespace=namespace,
+        MetricName=metric_name,
+        Dimensions=dimensions,
+        StartTime=start,
+        EndTime=end,
+        Period=300,
+        Statistics=["Sum"]
+    )
+
+    print(f"Fetched {metric_name} (stage={stage}): {response}")  # DEBUG
+
+    os.makedirs(os.path.dirname(outfile), exist_ok=True)
+    with open(outfile, "w") as f:
+        json.dump(response, f, default=str)
+
+    return response
+
+
+# --- ColdStartCount ---
+cw_json = "reports/cloudwatch/coldstart.json"
+if args.refresh or not os.path.exists(cw_json):
+    fetch_metric("QAFramework/Serverless", "ColdStartCount", cw_json, stage=args.stage)
+
 if os.path.exists(cw_json):
     with open(cw_json) as f:
         data = json.load(f)
 
     if data.get("Datapoints"):
-        # Sort by timestamp, take latest
         datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
         latest = datapoints[-1]
 
-        # ColdStartCount summary
         coldstart_summary = {
             "Sum": latest.get("Sum", 0),
             "Timestamp": latest.get("Timestamp")
@@ -209,23 +256,21 @@ if os.path.exists(cw_json):
             if write_header:
                 writer.writerow(["timestamp", "ColdStartCount"])
             writer.writerow(row_cold)
+    else:
+        if "coldstart_summary" not in globals():
+            coldstart_summary = {}
+else:
+    coldstart_summary = {}
 
-# Build ColdStart trend
-if os.path.exists(cw_history_coldstart):
-    df_hist = pd.read_csv(cw_history_coldstart)
-    if not df_hist.empty:
-        fig_cold = px.line(df_hist, x="timestamp", y="ColdStartCount", markers=True,
-                           title="CloudWatch - ColdStartCount over time")
-        trend_cw_cold_html = fig_cold.to_html(full_html=False)
-
-# --- RequestsProcessed (separate JSON export expected) ---
-# --- RequestsProcessed (separate JSON export expected) ---
+# --- RequestsProcessed ---
 cw_processed_json = "reports/cloudwatch/requests.json"
-requests_summary = {}   # <-- add this line so it always exists
+if args.refresh or not os.path.exists(cw_processed_json):
+    fetch_metric("QAFramework/Serverless", "RequestsProcessed", cw_processed_json, stage=args.stage)
 
 if os.path.exists(cw_processed_json):
     with open(cw_processed_json) as f:
         data = json.load(f)
+
     if data.get("Datapoints"):
         datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
         latest = datapoints[-1]
@@ -235,6 +280,7 @@ if os.path.exists(cw_processed_json):
             "Timestamp": latest.get("Timestamp")
         }
 
+        # Save RequestsProcessed history
         run_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         row_proc = [run_time, latest.get("Sum", 0)]
         write_header = not os.path.exists(cw_history_processed)
@@ -251,10 +297,11 @@ if os.path.exists(cw_processed_json):
                 fig_proc = px.line(df_hist, x="timestamp", y="RequestsProcessed", markers=True,
                                    title="CloudWatch - RequestsProcessed over time")
                 trend_cw_processed_html = fig_proc.to_html(full_html=False)
-
+    else:
+        if "requests_summary" not in globals():
+            requests_summary = {}
 else:
     requests_summary = {}
-
 
 # Template
 env = Environment(loader=FileSystemLoader("."))
@@ -347,7 +394,7 @@ template = env.from_string("""
 
     <div class="section">
         <h2>CloudWatch - Metrics</h2>
-    
+
         <h3>ColdStartCount</h3>
         {% if coldstart %}
             <div class="metric">ColdStartCount: {{ coldstart.Sum }}</div>
@@ -356,7 +403,7 @@ template = env.from_string("""
         {% else %}
             <p>No ColdStartCount metrics found.</p>
         {% endif %}
-    
+
         <h3>RequestsProcessed</h3>
         {% if requests %}
             <div class="metric">RequestsProcessed: {{ requests.Sum }}</div>
@@ -366,8 +413,6 @@ template = env.from_string("""
             <p>No RequestsProcessed metrics found.</p>
         {% endif %}
     </div>
-    >
-
 </body>
 </html>
 """)

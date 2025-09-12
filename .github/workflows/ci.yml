@@ -137,18 +137,31 @@ jobs:
 
           cat reports/cloudwatch/requests.json
 
+      - name: Check RequestsProcessed threshold
+        run: |
+          COUNT=$(jq -r '.Datapoints[0].Sum // 0' reports/cloudwatch/requests.json)
+          echo "RequestsProcessed in last 10 minutes: $COUNT"
+          if [ "$COUNT" -lt 1 ]; then
+            echo "❌ No requests processed! Failing pipeline."
+            exit 1
+          else
+            echo "✅ Requests processed successfully"
+          fi
+
+
       - name: Promote to live alias
         if: success()
         run: |
           echo "Promoting version $VERSION to live alias..."
           aws lambda update-alias \
-            --function-name helloLambda \
+            --function-name QAFrameworkCRUD \
             --name live \
             --function-version $VERSION || \
           aws lambda create-alias \
-            --function-name helloLambda \
+            --function-name QAFrameworkCRUD \
             --name live \
             --function-version $VERSION
+
 
       - name: Install dashboard dependencies
         run: |

@@ -1,0 +1,5 @@
+{
+  "httpMethod": "PUT",
+  "path": "/dev/items",
+  "body": "{ \"id\": \"8254\", \"name\": \"updated\" }"
+}
