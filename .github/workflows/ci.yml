@@ -94,6 +94,17 @@ jobs:
           else
             echo "✅ Lambda dev alias passed health check"
           fi
+      - name: Generate API Gateway traffic (for metrics)
+        run: |
+          echo "Sending traffic to API Gateway..."
+          for i in {1..5}; do
+            curl -s https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/ \
+              -H "Content-Type: application/json" \
+              -d '{"ping":"ci-metric-test"}'
+            echo
+          done
+          echo "✅ Sent 5 test requests"
+
 
       - name: Send test request to API Gateway
         run: |
