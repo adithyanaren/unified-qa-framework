@@ -9,14 +9,41 @@ logger.setLevel(logging.INFO)
 # CloudWatch client
 cloudwatch = boto3.client("cloudwatch")
 NAMESPACE = "QAFramework/Serverless"
-METRIC_NAME = "RequestsProcessed"
+METRIC_REQUESTS = "RequestsProcessed"
+METRIC_COLDSTART = "ColdStartCount"
 STAGE = os.getenv("STAGE", "dev")
 
 # DynamoDB table
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(os.getenv("TABLE_NAME", "ItemsTable"))
 
+# Cold start flag
+COLD_START = True
+
+def publish_metric(metric_name, value):
+    try:
+        cloudwatch.put_metric_data(
+            Namespace=NAMESPACE,
+            MetricData=[{
+                "MetricName": metric_name,
+                "Value": value,
+                "Unit": "Count"
+            }]
+        )
+    except Exception as e:
+        logger.error(f"Failed to publish metric {metric_name}: {e}")
+
 def lambda_handler(event, context):
+    global COLD_START
+
+    # ✅ Cold start metric
+    if COLD_START:
+        publish_metric(METRIC_COLDSTART, 1)
+        COLD_START = False
+
+    # ✅ Requests processed metric
+    publish_metric(METRIC_REQUESTS, 1)
+
     # 🔎 Log full incoming event for debugging
     logger.info("Received event: %s", json.dumps(event))
     print("=== FULL EVENT START ===")
@@ -54,26 +81,32 @@ def lambda_handler(event, context):
         if path == f"/{STAGE}/items" and method == "POST":
             body = json.loads(event["body"])
             table.put_item(Item=body)
-            return {"statusCode": 200, "headers": cors_headers, "body": json.dumps({"message": "Item created", "item": body})}
+            return {"statusCode": 200, "headers": cors_headers,
+                    "body": json.dumps({"message": "Item created", "item": body})}
 
         elif path == f"/{STAGE}/items" and method == "GET":
             item_id = event["queryStringParameters"]["id"]
             response = table.get_item(Key={"id": item_id})
-            return {"statusCode": 200, "headers": cors_headers, "body": json.dumps(response.get("Item", {}))}
+            return {"statusCode": 200, "headers": cors_headers,
+                    "body": json.dumps(response.get("Item", {}))}
 
         elif path == f"/{STAGE}/items" and method == "PUT":
             body = json.loads(event["body"])
             table.put_item(Item=body)  # overwrite
-            return {"statusCode": 200, "headers": cors_headers, "body": json.dumps({"message": "Item updated", "item": body})}
+            return {"statusCode": 200, "headers": cors_headers,
+                    "body": json.dumps({"message": "Item updated", "item": body})}
 
         elif path == f"/{STAGE}/items" and method == "DELETE":
             item_id = event["queryStringParameters"]["id"]
             table.delete_item(Key={"id": item_id})
-            return {"statusCode": 200, "headers": cors_headers, "body": json.dumps({"message": f"Item {item_id} deleted"})}
+            return {"statusCode": 200, "headers": cors_headers,
+                    "body": json.dumps({"message": f"Item {item_id} deleted"})}
 
         else:
-            return {"statusCode": 404, "headers": cors_headers, "body": '{"error": "Not Found"}'}
+            return {"statusCode": 404, "headers": cors_headers,
+                    "body": '{"error": "Not Found"}'}
 
     except Exception as e:
         logger.error(f"Error: {str(e)}")
-        return {"statusCode": 500, "headers": cors_headers, "body": json.dumps({"error": str(e)})}
+        return {"statusCode": 500, "headers": cors_headers,
+                "body": json.dumps({"error": str(e)})}
