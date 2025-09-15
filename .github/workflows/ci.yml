@@ -131,7 +131,7 @@ jobs:
       - name: Check ColdStartCount threshold with retry
         run: |
           ATTEMPTS=0
-          COUNT=0
+          COUNT_INT=0
           while [ $ATTEMPTS -lt 3 ]; do
             echo "Fetching ColdStartCount (attempt $((ATTEMPTS+1)))..."
             aws cloudwatch get-metric-statistics \
@@ -145,9 +145,11 @@ jobs:
               > reports/cloudwatch/coldstart.json
 
             COUNT=$(jq -r '.Datapoints[0].Sum // 0' reports/cloudwatch/coldstart.json)
-            echo "ColdStartCount in last 10 minutes: $COUNT"
+            COUNT_INT=$(printf "%.0f" "$COUNT")   # ✅ convert float to integer
 
-            if [ "$COUNT" -le 2 ]; then
+            echo "ColdStartCount in last 10 minutes: $COUNT_INT"
+
+            if [ "$COUNT_INT" -le 2 ]; then
               echo "✅ Cold starts within acceptable threshold"
               exit 0
             fi
@@ -160,10 +162,11 @@ jobs:
           echo "❌ Too many cold starts after retries!"
           exit 1
 
+
       - name: Check RequestsProcessed threshold with retry
         run: |
           ATTEMPTS=0
-          COUNT=0
+          COUNT_INT=0
           SUCCESS=false
           while [ $ATTEMPTS -lt 6 ]; do
             echo "Fetching RequestsProcessed (attempt $((ATTEMPTS+1)))..."
@@ -178,9 +181,11 @@ jobs:
               > reports/cloudwatch/requests.json
 
             COUNT=$(jq -r '.Datapoints[0].Sum // 0' reports/cloudwatch/requests.json)
-            echo "RequestsProcessed in last 15 minutes: $COUNT"
+            COUNT_INT=$(printf "%.0f" "$COUNT")   # ✅ convert float to integer
 
-            if [ "$COUNT" -ge 1 ]; then
+            echo "RequestsProcessed in last 15 minutes: $COUNT_INT"
+
+            if [ "$COUNT_INT" -ge 1 ]; then
               echo "✅ Requests processed successfully"
               SUCCESS=true
               break
@@ -194,6 +199,7 @@ jobs:
           if [ "$SUCCESS" = false ]; then
             echo "⚠️ No requests processed after retries (CloudWatch lag?). Continuing pipeline."
           fi
+
 
       - name: Promote to live alias
         if: success()
