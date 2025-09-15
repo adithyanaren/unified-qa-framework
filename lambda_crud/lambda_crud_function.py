@@ -18,7 +18,8 @@ table = dynamodb.Table(os.getenv("TABLE_NAME", "ItemsTable"))
 # Global flag to detect first invocation (cold start)
 IS_COLD_START = True
 
-def publish_metric(metric_name):
+
+def publish_metric(metric_name, function_name):
     """Publish a custom CloudWatch metric with Stage and FunctionName dimensions."""
     try:
         cloudwatch.put_metric_data(
@@ -27,7 +28,7 @@ def publish_metric(metric_name):
                 {
                     "MetricName": metric_name,
                     "Dimensions": [
-                        {"Name": "FunctionName", "Value": "helloLambda"},
+                        {"Name": "FunctionName", "Value": function_name},
                         {"Name": "Stage", "Value": STAGE}
                     ],
                     "Value": 1,
@@ -35,22 +36,26 @@ def publish_metric(metric_name):
                 }
             ]
         )
-        logger.info(f"Published metric: {metric_name}=1")
+        logger.info(f"Published metric: {metric_name}=1 for {function_name}")
     except Exception as e:
         logger.error(f"Failed to publish {metric_name}: {e}")
+
 
 def lambda_handler(event, context):
     global IS_COLD_START
 
     logger.info("Received event: %s", json.dumps(event))
 
+    # Use actual function name from context
+    function_name = context.function_name if context else "UnknownFunction"
+
     # Cold start detection (fires once per container lifecycle)
     if IS_COLD_START:
-        publish_metric("ColdStartCount")
+        publish_metric("ColdStartCount", function_name)
         IS_COLD_START = False
 
     # Always track requests
-    publish_metric("RequestsProcessed")
+    publish_metric("RequestsProcessed", function_name)
 
     # Detect method + path
     if "requestContext" in event and "http" in event["requestContext"]:  # HTTP API v2

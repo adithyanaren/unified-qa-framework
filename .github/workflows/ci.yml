@@ -94,6 +94,7 @@ jobs:
           else
             echo "✅ Lambda dev alias passed health check"
           fi
+
       - name: Generate API Gateway traffic (for metrics)
         run: |
           echo "Sending traffic to API Gateway..."
@@ -105,7 +106,6 @@ jobs:
           done
           echo "✅ Sent 5 test requests"
 
-
       - name: Send test request to API Gateway
         run: |
           echo "Sending test request to API Gateway..."
@@ -113,6 +113,16 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"ping":"ci-test"}'
           cat response_api.json
+
+      - name: Debug - List CloudWatch metrics
+        run: |
+          echo "Listing all metrics in QAFramework/Serverless..."
+          aws cloudwatch list-metrics \
+            --namespace QAFramework/Serverless \
+            --output json > reports/cloudwatch/metrics_list.json
+          
+          cat reports/cloudwatch/metrics_list.json
+
 
       - name: Check ColdStartCount threshold with retry
         run: |
@@ -123,7 +133,7 @@ jobs:
             aws cloudwatch get-metric-statistics \
               --namespace QAFramework/Serverless \
               --metric-name ColdStartCount \
-              --dimensions Name=FunctionName,Value=helloLambda Name=Stage,Value=dev \
+              --dimensions Name=FunctionName,Value=QAFrameworkCRUD Name=Stage,Value=dev \
               --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
               --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
               --period 300 \
@@ -155,7 +165,7 @@ jobs:
             aws cloudwatch get-metric-statistics \
               --namespace QAFramework/Serverless \
               --metric-name RequestsProcessed \
-              --dimensions Name=FunctionName,Value=helloLambda Name=Stage,Value=dev \
+              --dimensions Name=FunctionName,Value=QAFrameworkCRUD Name=Stage,Value=dev \
               --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
               --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
               --period 300 \
