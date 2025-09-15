@@ -22,6 +22,14 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -114,6 +122,12 @@ jobs:
             -d '{"ping":"ci-test"}'
           cat response_api.json
 
+      - name: Ensure CloudWatch reports exist
+        run: |
+          mkdir -p reports/cloudwatch
+          touch reports/cloudwatch/coldstart.json
+          touch reports/cloudwatch/requests.json
+
       - name: Check ColdStartCount threshold with retry
         run: |
           ATTEMPTS=0
@@ -194,13 +208,9 @@ jobs:
             --name live \
             --function-version $VERSION
 
-      - name: Install dashboard dependencies
-        run: |
-          pip install pandas jinja2 plotly
-
       - name: Generate unified dashboard
         run: |
-          python generate_dashboard.py
+          python generate_dashboard.py --refresh --stage dev --function QAFrameworkCRUD
 
       - name: Copy dashboard and reports
         run: |

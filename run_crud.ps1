@@ -62,7 +62,7 @@ aws cloudwatch get-metric-statistics `
   --metric-name "RequestsProcessed" `
   --start-time $start `
   --end-time $end `
-  --period 300 `
+  --period 60 `
   --statistics Sum > metrics.json
 
 Get-Content metrics.json

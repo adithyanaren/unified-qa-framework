@@ -21,8 +21,9 @@ IS_COLD_START = True
 
 def publish_metric(metric_name, function_name):
     """Publish a custom CloudWatch metric with Stage and FunctionName dimensions."""
+    logger.info(f"[DEBUG] Attempting to publish metric={metric_name}, function={function_name}, stage={STAGE}")
     try:
-        cloudwatch.put_metric_data(
+        response = cloudwatch.put_metric_data(
             Namespace=NAMESPACE,
             MetricData=[
                 {
@@ -36,9 +37,10 @@ def publish_metric(metric_name, function_name):
                 }
             ]
         )
-        logger.info(f"Published metric: {metric_name}=1 for {function_name}")
+        logger.info(f"[DEBUG] Successfully published metric={metric_name}, response={response}")
     except Exception as e:
-        logger.error(f"Failed to publish {metric_name}: {e}")
+        logger.error(f"[ERROR] Failed to publish metric={metric_name}: {e}")
+
 
 
 def lambda_handler(event, context):

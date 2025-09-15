@@ -5,37 +5,62 @@ import json
 from jinja2 import Environment, FileSystemLoader
 import plotly.express as px
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 import boto3
 import argparse
-from datetime import timedelta
 
+# -------------------------------
 # Paths
+# -------------------------------
 pytest_xml = "reports/pytest/results.xml"
 robot_report = "reports/robot/report.html"
 robot_log = "reports/robot/log.html"
 robot_output = "reports/robot/output.xml"
 locust_csv = "reports/locust/results_stats.csv"
-cw_json = "reports/cloudwatch/coldstart.json"
 
 # History files
 robot_history_file = "reports/robot_history.csv"
 pytest_history_file = "reports/pytest_history.csv"
 locust_history_file = "reports/locust_history.csv"
+cw_history_processed = "reports/cw_processed_history.csv"
+cw_history_coldstart = "reports/cw_coldstart_history.csv"
 
+# -------------------------------
 # Data containers
+# -------------------------------
 pytest_summary = {}
 robot_summary = {}
 robot_details = []
 locust_summary = {}
 coldstart_summary = {}
+requests_summary = {}
+
 robot_chart_html = ""
 locust_chart_html = ""
 trend_robot_html = ""
 trend_pytest_html = ""
 trend_locust_html = ""
+trend_cw_processed_html = ""
+trend_cw_cold_html = ""
+trend_cw_combined_html = ""  # NEW
 
-# --- PyTest ---
+# -------------------------------
+# CLI argument parser
+# -------------------------------
+parser = argparse.ArgumentParser()
+parser.add_argument("--refresh", action="store_true",
+                    help="Fetch latest metrics from CloudWatch instead of using cached JSON")
+parser.add_argument("--stage", type=str, default="dev",
+                    help="Stage dimension to filter metrics (default: dev)")
+parser.add_argument("--function", type=str, default="QAFrameworkCRUD",
+                    help="Lambda function name for metrics (default: QAFrameworkCRUD)")
+args, _ = parser.parse_known_args()
+
+cw = boto3.client("cloudwatch")
+
+# ================================================================
+# PyTest
+# ================================================================
 if os.path.exists(pytest_xml):
     try:
         tree = ET.parse(pytest_xml)
@@ -76,7 +101,9 @@ if os.path.exists(pytest_history_file):
                       title="PyTest Trend (Failures/Errors/Skipped over time)")
         trend_pytest_html = fig.to_html(full_html=False)
 
-# --- Robot ---
+# ================================================================
+# Robot Framework
+# ================================================================
 if os.path.exists(robot_output):
     try:
         tree = ET.parse(robot_output)
@@ -131,15 +158,15 @@ if os.path.exists(robot_history_file):
                             title="Robot Test Trend (Pass/Fail over time)")
         trend_robot_html = fig_trend.to_html(full_html=False)
 
-# --- Locust ---
+# ================================================================
+# Locust
+# ================================================================
 if os.path.exists(locust_csv):
     df = pd.read_csv(locust_csv)
 
-    # Handle both new and old Locust CSV formats
     col_requests = next((c for c in df.columns if "request count" in c.lower() or "requests" in c.lower()), None)
     col_failures = next((c for c in df.columns if "failure count" in c.lower() or c.lower() == "failures"), None)
-    col_avg_time = next(
-        (c for c in df.columns if "average response time" in c.lower() or "avg response time" in c.lower()), None)
+    col_avg_time = next((c for c in df.columns if "average response time" in c.lower() or "avg response time" in c.lower()), None)
 
     if col_requests and col_failures and col_avg_time:
         locust_summary = {
@@ -170,9 +197,6 @@ if os.path.exists(locust_csv):
             fig2 = px.bar(df, x="Name", y=col_failures, title="Locust - Failures per Endpoint")
             locust_chart_html += fig2.to_html(full_html=False)
 
-    else:
-        locust_summary = {"error": f"Unexpected CSV columns: {list(df.columns)}"}
-
 # Build Locust trend
 if os.path.exists(locust_history_file):
     df_hist = pd.read_csv(locust_history_file)
@@ -181,129 +205,113 @@ if os.path.exists(locust_history_file):
                             title="Locust Trend (Avg Response Time & Failures over time)")
         trend_locust_html = fig_trend.to_html(full_html=False)
 
-# --- CloudWatch ---
-cw_history_processed = "reports/cw_processed_history.csv"
-cw_history_coldstart = "reports/cw_coldstart_history.csv"
-trend_cw_processed_html = ""
-trend_cw_cold_html = ""
-
-# CLI argument parser
-parser = argparse.ArgumentParser()
-parser.add_argument("--refresh", action="store_true",
-                    help="Fetch latest metrics from CloudWatch instead of using cached JSON")
-parser.add_argument("--stage", type=str, default="dev",
-                    help="Stage dimension to filter metrics (default: dev)")
-args, _ = parser.parse_known_args()
-
-cw = boto3.client("cloudwatch")
-
-
-def fetch_metric(namespace, metric_name, outfile, stage=None):
+# ================================================================
+# CloudWatch
+# ================================================================
+def fetch_metric(namespace, metric_name, outfile, stage=None, function_name="helloLambda"):
     """Fetch CloudWatch metric and save JSON locally."""
     end = datetime.utcnow()
     start = end - timedelta(hours=6)  # last 6 hours
 
-    dimensions = []
+    dimension_sets = []
     if stage:
-        dimensions = [
+        dimension_sets.append([
             {"Name": "Stage", "Value": stage},
-            {"Name": "FunctionName", "Value": "helloLambda"}
-        ]
+            {"Name": "FunctionName", "Value": function_name}
+        ])
+    dimension_sets.append([{"Name": "FunctionName", "Value": function_name}])
 
-    response = cw.get_metric_statistics(
-        Namespace=namespace,
-        MetricName=metric_name,
-        Dimensions=dimensions,
-        StartTime=start,
-        EndTime=end,
-        Period=300,
-        Statistics=["Sum"]
-    )
-
-    print(f"Fetched {metric_name} (stage={stage}): {response}")  # DEBUG
+    response = None
+    for dims in dimension_sets:
+        try:
+            resp = cw.get_metric_statistics(
+                Namespace=namespace,
+                MetricName=metric_name,
+                Dimensions=dims,
+                StartTime=start,
+                EndTime=end,
+                Period=300,
+                Statistics=["Sum"]
+            )
+            if resp.get("Datapoints"):
+                response = resp
+                break
+        except Exception as e:
+            print(f"⚠️ Failed with dimensions {dims}: {e}")
 
     os.makedirs(os.path.dirname(outfile), exist_ok=True)
     with open(outfile, "w") as f:
-        json.dump(response, f, default=str)
+        json.dump(response or {}, f, default=str)
 
-    return response
-
+    return response or {}
 
 # --- ColdStartCount ---
-cw_json = "reports/cloudwatch/coldstart.json"
-if args.refresh or not os.path.exists(cw_json):
-    fetch_metric("QAFramework/Serverless", "ColdStartCount", cw_json, stage=args.stage)
+cw_cold_json = "reports/cloudwatch/coldstart.json"
+if args.refresh or not os.path.exists(cw_cold_json):
+    fetch_metric("QAFramework/Serverless", "ColdStartCount", cw_cold_json, stage=args.stage, function_name=args.function)
 
-if os.path.exists(cw_json):
-    with open(cw_json) as f:
+if os.path.exists(cw_cold_json):
+    with open(cw_cold_json) as f:
         data = json.load(f)
-
     if data.get("Datapoints"):
         datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
         latest = datapoints[-1]
-
-        coldstart_summary = {
-            "Sum": latest.get("Sum", 0),
-            "Timestamp": latest.get("Timestamp")
-        }
-
-        # Save ColdStart history
+        coldstart_summary = {"Sum": latest.get("Sum", 0), "Timestamp": latest.get("Timestamp")}
+        # Save history
         run_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         row_cold = [run_time, latest.get("Sum", 0)]
         write_header = not os.path.exists(cw_history_coldstart)
         with open(cw_history_coldstart, "a", newline="") as f:
             writer = csv.writer(f)
-            if write_header:
-                writer.writerow(["timestamp", "ColdStartCount"])
+            if write_header: writer.writerow(["timestamp", "ColdStartCount"])
             writer.writerow(row_cold)
-    else:
-        if "coldstart_summary" not in globals():
-            coldstart_summary = {}
-else:
-    coldstart_summary = {}
+        # Trend
+        df_hist = pd.read_csv(cw_history_coldstart)
+        if not df_hist.empty:
+            fig_cold = px.line(df_hist, x="timestamp", y="ColdStartCount", markers=True,
+                               title="CloudWatch - ColdStartCount over time")
+            trend_cw_cold_html = fig_cold.to_html(full_html=False)
 
 # --- RequestsProcessed ---
 cw_processed_json = "reports/cloudwatch/requests.json"
 if args.refresh or not os.path.exists(cw_processed_json):
-    fetch_metric("QAFramework/Serverless", "RequestsProcessed", cw_processed_json, stage=args.stage)
+    fetch_metric("QAFramework/Serverless", "RequestsProcessed", cw_processed_json, stage=args.stage, function_name=args.function)
 
 if os.path.exists(cw_processed_json):
     with open(cw_processed_json) as f:
         data = json.load(f)
-
     if data.get("Datapoints"):
         datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
         latest = datapoints[-1]
-
-        requests_summary = {
-            "Sum": latest.get("Sum", 0),
-            "Timestamp": latest.get("Timestamp")
-        }
-
-        # Save RequestsProcessed history
+        requests_summary = {"Sum": latest.get("Sum", 0), "Timestamp": latest.get("Timestamp")}
+        # Save history
         run_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         row_proc = [run_time, latest.get("Sum", 0)]
         write_header = not os.path.exists(cw_history_processed)
         with open(cw_history_processed, "a", newline="") as f:
             writer = csv.writer(f)
-            if write_header:
-                writer.writerow(["timestamp", "RequestsProcessed"])
+            if write_header: writer.writerow(["timestamp", "RequestsProcessed"])
             writer.writerow(row_proc)
+        # Trend
+        df_hist = pd.read_csv(cw_history_processed)
+        if not df_hist.empty:
+            fig_proc = px.line(df_hist, x="timestamp", y="RequestsProcessed", markers=True,
+                               title="CloudWatch - RequestsProcessed over time")
+            trend_cw_processed_html = fig_proc.to_html(full_html=False)
 
-        # Build RequestsProcessed trend
-        if os.path.exists(cw_history_processed):
-            df_hist = pd.read_csv(cw_history_processed)
-            if not df_hist.empty:
-                fig_proc = px.line(df_hist, x="timestamp", y="RequestsProcessed", markers=True,
-                                   title="CloudWatch - RequestsProcessed over time")
-                trend_cw_processed_html = fig_proc.to_html(full_html=False)
-    else:
-        if "requests_summary" not in globals():
-            requests_summary = {}
-else:
-    requests_summary = {}
+# --- Combined CloudWatch ---
+if os.path.exists(cw_history_processed) and os.path.exists(cw_history_coldstart):
+    df_proc = pd.read_csv(cw_history_processed)
+    df_cold = pd.read_csv(cw_history_coldstart)
+    if not df_proc.empty and not df_cold.empty:
+        df_comb = pd.merge(df_proc, df_cold, on="timestamp", how="outer").sort_values("timestamp")
+        fig_comb = px.line(df_comb, x="timestamp", y=["RequestsProcessed", "ColdStartCount"],
+                           markers=True, title="CloudWatch - Requests vs Cold Starts")
+        trend_cw_combined_html = fig_comb.to_html(full_html=False)
 
-# Template
+# ================================================================
+# HTML Template
+# ================================================================
 env = Environment(loader=FileSystemLoader("."))
 template = env.from_string("""
 <!DOCTYPE html>
@@ -365,9 +373,9 @@ template = env.from_string("""
                 <h3>Trend Over Time</h3>
                 <div>{{ trend_robot|safe }}</div>
                 <h3>Embedded Report</h3>
-                <iframe src="report.html" width="100%" height="600"></iframe>
+                <iframe src="report.html"></iframe>
                 <h3>Embedded Log</h3>
-                <iframe src="log.html" width="100%" height="600"></iframe>
+                <iframe src="log.html"></iframe>
             {% endif %}
         {% else %}
             <p>No Robot report found.</p>
@@ -412,12 +420,21 @@ template = env.from_string("""
         {% else %}
             <p>No RequestsProcessed metrics found.</p>
         {% endif %}
+
+        <h3>Combined View</h3>
+        {% if trend_cw_combined %}
+            <div>{{ trend_cw_combined|safe }}</div>
+        {% else %}
+            <p>No combined metrics available.</p>
+        {% endif %}
     </div>
 </body>
 </html>
 """)
 
-# Render HTML
+# ================================================================
+# Render & Save
+# ================================================================
 html_out = template.render(
     pytest=pytest_summary,
     locust=locust_summary,
@@ -431,7 +448,8 @@ html_out = template.render(
     trend_pytest=trend_pytest_html,
     trend_locust=trend_locust_html,
     trend_cw_cold=trend_cw_cold_html,
-    trend_cw_processed=trend_cw_processed_html
+    trend_cw_processed=trend_cw_processed_html,
+    trend_cw_combined=trend_cw_combined_html
 )
 
 os.makedirs("reports/robot", exist_ok=True)

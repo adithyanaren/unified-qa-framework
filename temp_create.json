@@ -1,5 +1,5 @@
 {
   "httpMethod": "POST",
   "path": "/dev/items",
-  "body": "{ \"id\": \"8254\", \"name\": \"test\" }"
+  "body": "{ \"id\": \"5041\", \"name\": \"test\" }"
 }
