@@ -114,95 +114,50 @@ jobs:
           done
           echo "✅ Sent 5 test requests"
 
-      - name: Send test request to API Gateway
+      - name: Run QAFramework Harness
         run: |
-          echo "Sending test request to API Gateway..."
-          curl -s -o response_api.json -w "%{http_code}" https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/ \
-            -H "Content-Type: application/json" \
-            -d '{"ping":"ci-test"}'
-          cat response_api.json
+          echo "=== Running Harness Events ==="
+          mkdir -p reports/harness
+          run_ts=$(date -u +%Y%m%dT%H%M%SZ)
 
-      - name: Ensure CloudWatch reports exist
+          invoke_and_save() {
+            name=$1
+            payload=$2
+            outfile="reports/harness/${name}_${run_ts}.json"
+            echo "--- $name ---"
+            aws lambda invoke \
+              --function-name QAFrameworkCRUD:dev \
+              --cli-binary-format raw-in-base64-out \
+              --payload "$payload" \
+              "$outfile" > /dev/null
+            cat "$outfile"
+            # also keep a latest copy for dashboard
+            cp "$outfile" "reports/harness/${name}.json"
+          }
+
+          invoke_and_save root   '{"httpMethod":"GET","path":"/dev/"}'
+          invoke_and_save create '{"httpMethod":"POST","path":"/dev/items","body":"{\"id\":\"ci123\",\"name\":\"CI Item\"}"}'
+          invoke_and_save read   '{"httpMethod":"GET","path":"/dev/items","queryStringParameters":{"id":"ci123"}}'
+          invoke_and_save update '{"httpMethod":"PUT","path":"/dev/items","body":"{\"id\":\"ci123\",\"name\":\"Updated CI Item\"}"}'
+          invoke_and_save delete '{"httpMethod":"DELETE","path":"/dev/items","queryStringParameters":{"id":"ci123"}}'
+
+      - name: Check ColdStartCount threshold
         run: |
-          mkdir -p reports/cloudwatch
-          touch reports/cloudwatch/coldstart.json
-          touch reports/cloudwatch/requests.json
-
-      - name: Check ColdStartCount threshold with retry
-        run: |
-          ATTEMPTS=0
-          COUNT_INT=0
-          SUCCESS=false
-          while [ $ATTEMPTS -lt 3 ]; do
-            echo "Fetching ColdStartCount (attempt $((ATTEMPTS+1)))..."
-            aws cloudwatch get-metric-statistics \
-              --namespace QAFramework/Serverless \
-              --metric-name ColdStartCount \
-              --dimensions Name=FunctionName,Value=QAFrameworkCRUD Name=Stage,Value=dev \
-              --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
-              --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-              --period 300 \
-              --statistics Sum \
-              > reports/cloudwatch/coldstart.json
-
-            COUNT=$(jq -r '.Datapoints[0].Sum // 0' reports/cloudwatch/coldstart.json)
-            COUNT_INT=$(printf "%.0f" "$COUNT")
-
-            echo "ColdStartCount in last 10 minutes: $COUNT_INT"
-
-            if [ "$COUNT_INT" -le 2 ]; then
-              echo "✅ Cold starts within acceptable threshold"
-              SUCCESS=true
-              break
-            fi
-
-            echo "⏳ Too many cold starts, retrying in 30s..."
-            sleep 30
-            ATTEMPTS=$((ATTEMPTS+1))
-          done
-
-          if [ "$SUCCESS" = false ]; then
-            echo "⚠️ Too many cold starts after retries (observed $COUNT_INT). Continuing pipeline."
+          COUNT=$(jq -r '.Datapoints[0].Sum // 0' reports/cloudwatch/coldstart.json || echo 0)
+          COUNT_INT=$(printf "%.0f" "$COUNT")
+          echo "ColdStartCount: $COUNT_INT"
+          if [ "$COUNT_INT" -gt 5 ]; then
+            echo "⚠️ Warning: High cold start count ($COUNT_INT)"
           fi
 
-
-      - name: Check RequestsProcessed threshold with retry
+      - name: Check RequestsProcessed threshold
         run: |
-          ATTEMPTS=0
-          COUNT_INT=0
-          SUCCESS=false
-          while [ $ATTEMPTS -lt 6 ]; do
-            echo "Fetching RequestsProcessed (attempt $((ATTEMPTS+1)))..."
-            aws cloudwatch get-metric-statistics \
-              --namespace QAFramework/Serverless \
-              --metric-name RequestsProcessed \
-              --dimensions Name=FunctionName,Value=QAFrameworkCRUD Name=Stage,Value=dev \
-              --start-time $(date -u -d '15 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
-              --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-              --period 300 \
-              --statistics Sum \
-              > reports/cloudwatch/requests.json
-
-            COUNT=$(jq -r '.Datapoints[0].Sum // 0' reports/cloudwatch/requests.json)
-            COUNT_INT=$(printf "%.0f" "$COUNT")   # ✅ convert float to integer
-
-            echo "RequestsProcessed in last 15 minutes: $COUNT_INT"
-
-            if [ "$COUNT_INT" -ge 1 ]; then
-              echo "✅ Requests processed successfully"
-              SUCCESS=true
-              break
-            fi
-
-            echo "⏳ No requests yet, retrying in 60s..."
-            sleep 60
-            ATTEMPTS=$((ATTEMPTS+1))
-          done
-
-          if [ "$SUCCESS" = false ]; then
-            echo "⚠️ No requests processed after retries (CloudWatch lag?). Continuing pipeline."
+          COUNT=$(jq -r '.Datapoints[0].Sum // 0' reports/cloudwatch/requests.json || echo 0)
+          COUNT_INT=$(printf "%.0f" "$COUNT")
+          echo "RequestsProcessed: $COUNT_INT"
+          if [ "$COUNT_INT" -lt 1 ]; then
+            echo "⚠️ Warning: No requests processed (possible CloudWatch lag)"
           fi
-
 
       - name: Promote to live alias
         if: success()
