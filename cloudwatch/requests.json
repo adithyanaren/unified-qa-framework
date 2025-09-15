@@ -1,4 +1,1 @@
-{
-    "Label": "RequestsProcessed",
-    "Datapoints": []
-}
+{"Label": "RequestsProcessed", "Datapoints": [{"Timestamp": "2025-09-15 13:28:00+00:00", "Sum": 2.0, "Unit": "Count"}, {"Timestamp": "2025-09-15 13:33:00+00:00", "Sum": 10.0, "Unit": "Count"}, {"Timestamp": "2025-09-15 13:48:00+00:00", "Sum": 19.0, "Unit": "Count"}, {"Timestamp": "2025-09-15 13:53:00+00:00", "Sum": 601.0, "Unit": "Count"}], "ResponseMetadata": {"RequestId": "4f934c42-972a-4772-bf73-1c04feb917c8", "HTTPStatusCode": 200, "HTTPHeaders": {"x-amzn-requestid": "4f934c42-972a-4772-bf73-1c04feb917c8", "content-type": "text/xml", "content-length": "893", "date": "Mon, 15 Sep 2025 14:18:33 GMT"}, "RetryAttempts": 0}}
