@@ -6,6 +6,10 @@ param (
 Write-Host "=== QAFramework Harness ==="
 Write-Host "Target Lambda: $FunctionName (Stage=$Stage)"
 
+# Make sure directories exist
+New-Item -ItemType Directory -Force -Path "reports\harness" | Out-Null
+New-Item -ItemType Directory -Force -Path "reports\cloudwatch" | Out-Null
+
 # Timestamps for CloudWatch queries
 $start = (Get-Date).ToUniversalTime().AddMinutes(-30).ToString("yyyy-MM-ddTHH:mm:ssZ")
 $end   = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
@@ -21,13 +25,15 @@ $events = @(
 
 foreach ($event in $events) {
     Write-Host "`n--- Invoking $event ---"
-    aws lambda invoke `
-      --function-name $FunctionName `
-      --cli-binary-format raw-in-base64-out `
-      --payload file://$event `
-      response.json | Out-Null
+    $outFile = "reports/harness/$($event.Replace('.json','.json'))"
 
-    Get-Content response.json
+    aws lambda invoke `
+        --function-name $FunctionName `
+        --cli-binary-format raw-in-base64-out `
+        --payload file://$event `
+        $outFile | Out-Null
+
+    Get-Content $outFile
     Start-Sleep -Seconds 2
 }
 
@@ -44,14 +50,14 @@ $requestsRaw = aws cloudwatch get-metric-statistics `
   --period 60 `
   --statistics Sum
 
-Write-Host "`nRequestsProcessed:"
-$requestsRaw | Out-File metrics_requests.json -Encoding utf8
-Get-Content metrics_requests.json
+$requestsPath = "reports/cloudwatch/requests.json"
+$requestsRaw | Out-File $requestsPath -Encoding utf8
+Get-Content $requestsPath
 
 # Export to CSV
 ($requestsRaw | ConvertFrom-Json).Datapoints |
     Select-Object Timestamp,Sum,Unit |
-    Export-Csv -Path requests_metrics.csv -NoTypeInformation
+    Export-Csv -Path reports/cloudwatch/requests_metrics.csv -NoTypeInformation
 
 # ColdStartCount
 $coldRaw = aws cloudwatch get-metric-statistics `
@@ -63,11 +69,11 @@ $coldRaw = aws cloudwatch get-metric-statistics `
   --period 60 `
   --statistics Sum
 
-Write-Host "`nColdStartCount:"
-$coldRaw | Out-File metrics_cold.json -Encoding utf8
-Get-Content metrics_cold.json
+$coldPath = "reports/cloudwatch/coldstart.json"
+$coldRaw | Out-File $coldPath -Encoding utf8
+Get-Content $coldPath
 
 # Export to CSV
 ($coldRaw | ConvertFrom-Json).Datapoints |
     Select-Object Timestamp,Sum,Unit |
-    Export-Csv -Path coldstart_metrics.csv -NoTypeInformation
+    Export-Csv -Path reports/cloudwatch/coldstart_metrics.csv -NoTypeInformation

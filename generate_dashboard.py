@@ -42,6 +42,9 @@ locust_chart_html = ""
 trend_robot_html = ""
 trend_pytest_html = ""
 trend_locust_html = ""
+trend_cw_processed_html = ""
+trend_cw_cold_html = ""
+trend_cw_combined_html = ""
 
 # -------------------------------
 # CLI argument parser
@@ -198,7 +201,7 @@ if os.path.exists(locust_history_file):
         trend_locust_html = fig_trend.to_html(full_html=False)
 
 # ================================================================
-# CloudWatch with fallback to history
+# CloudWatch
 # ================================================================
 def fetch_metric(namespace, metric_name, outfile, stage=None, function_name="helloLambda"):
     end = datetime.utcnow()
@@ -232,34 +235,60 @@ def fetch_metric(namespace, metric_name, outfile, stage=None, function_name="hel
         json.dump(response or {}, f, default=str)
     return response or {}
 
-def get_metric_with_fallback(metric_name, cw_json, history_file, colname):
-    summary = {}
-    if args.refresh or not os.path.exists(cw_json):
-        fetch_metric("QAFramework/Serverless", metric_name, cw_json,
-                     stage=args.stage, function_name=args.function)
-    if os.path.exists(cw_json):
-        with open(cw_json) as f:
-            data = json.load(f)
-        if data.get("Datapoints"):
-            datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
-            latest = datapoints[-1]
-            summary = {"Sum": latest.get("Sum", 0), "Timestamp": latest.get("Timestamp")}
-            # append to history
-            write_header = not os.path.exists(history_file)
-            with open(history_file, "a", newline="") as f:
-                writer = csv.writer(f)
-                if write_header:
-                    writer.writerow(["timestamp", colname])
-                writer.writerow([latest["Timestamp"], latest.get("Sum", 0)])
-        elif os.path.exists(history_file):
-            df = pd.read_csv(history_file)
-            if not df.empty:
-                last = df.iloc[-1]
-                summary = {"Sum": last[colname], "Timestamp": last["timestamp"]}
-    return summary
+# ColdStartCount
+cw_cold_json = "reports/cloudwatch/coldstart.json"
+if args.refresh or not os.path.exists(cw_cold_json):
+    fetch_metric("QAFramework/Serverless", "ColdStartCount", cw_cold_json, stage=args.stage, function_name=args.function)
+if os.path.exists(cw_cold_json):
+    with open(cw_cold_json) as f:
+        data = json.load(f)
+    if data.get("Datapoints"):
+        datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
+        latest = datapoints[-1]
+        coldstart_summary = {"Sum": latest.get("Sum", 0), "Timestamp": latest.get("Timestamp")}
 
-coldstart_summary = get_metric_with_fallback("ColdStartCount", "reports/cloudwatch/coldstart.json", cw_history_coldstart, "coldstart_sum")
-requests_summary = get_metric_with_fallback("RequestsProcessed", "reports/cloudwatch/requests.json", cw_history_processed, "requests_sum")
+# RequestsProcessed
+cw_processed_json = "reports/cloudwatch/requests.json"
+if args.refresh or not os.path.exists(cw_processed_json):
+    fetch_metric("QAFramework/Serverless", "RequestsProcessed", cw_processed_json, stage=args.stage, function_name=args.function)
+if os.path.exists(cw_processed_json):
+    with open(cw_processed_json) as f:
+        data = json.load(f)
+    if data.get("Datapoints"):
+        datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
+        latest = datapoints[-1]
+        requests_summary = {"Sum": latest.get("Sum", 0), "Timestamp": latest.get("Timestamp")}
+
+# ================================================================
+# Combined CloudWatch Trend (Requests + Cold Starts)
+# ================================================================
+if os.path.exists(cw_cold_json) and os.path.exists(cw_processed_json):
+    try:
+        with open(cw_cold_json) as f:
+            cold_data = json.load(f)
+        with open(cw_processed_json) as f:
+            req_data = json.load(f)
+
+        cold_points = sorted(cold_data.get("Datapoints", []), key=lambda d: d["Timestamp"])
+        req_points = sorted(req_data.get("Datapoints", []), key=lambda d: d["Timestamp"])
+
+        if cold_points and req_points:
+            df_cold = pd.DataFrame(cold_points)[["Timestamp", "Sum"]].rename(columns={"Sum": "ColdStartCount"})
+            df_req = pd.DataFrame(req_points)[["Timestamp", "Sum"]].rename(columns={"Sum": "RequestsProcessed"})
+            df = pd.merge(df_cold, df_req, on="Timestamp", how="outer").sort_values("Timestamp")
+
+            fig_combined = px.line(
+                df,
+                x="Timestamp",
+                y=["ColdStartCount", "RequestsProcessed"],
+                markers=True,
+                title="Combined View - Requests vs Cold Starts"
+            )
+            trend_cw_combined_html = fig_combined.to_html(full_html=False)
+
+    except Exception as e:
+        print(f"⚠️ Failed to generate combined trend: {e}")
+
 
 # ================================================================
 # Harness Results
@@ -390,6 +419,7 @@ template = env.from_string("""
         {% if coldstart %}
             <div class="metric">ColdStartCount: {{ coldstart.Sum }}</div>
             <div class="metric">Timestamp: {{ coldstart.Timestamp }}</div>
+            <div>{{ trend_cw_cold|safe }}</div>
         {% else %}
             <p>No ColdStartCount metrics found.</p>
         {% endif %}
@@ -397,8 +427,15 @@ template = env.from_string("""
         {% if requests %}
             <div class="metric">RequestsProcessed: {{ requests.Sum }}</div>
             <div class="metric">Timestamp: {{ requests.Timestamp }}</div>
+            <div>{{ trend_cw_processed|safe }}</div>
         {% else %}
             <p>No RequestsProcessed metrics found.</p>
+        {% endif %}
+        <h3>Combined View</h3>
+        {% if trend_cw_combined %}
+            <div>{{ trend_cw_combined|safe }}</div>
+        {% else %}
+            <p>No combined metrics available.</p>
         {% endif %}
     </div>
 </body>
@@ -420,6 +457,9 @@ html_out = template.render(
     trend_robot=trend_robot_html,
     trend_pytest=trend_pytest_html,
     trend_locust=trend_locust_html,
+    trend_cw_cold=trend_cw_cold_html,
+    trend_cw_processed=trend_cw_processed_html,
+    trend_cw_combined=trend_cw_combined_html,
     harness=harness_results
 )
 

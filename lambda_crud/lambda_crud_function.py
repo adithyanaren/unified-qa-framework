@@ -15,15 +15,14 @@ STAGE = os.getenv("STAGE", "dev")
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(os.getenv("TABLE_NAME", "ItemsTable"))
 
-# Global flag to detect first invocation (cold start)
+# Cold start detection
 IS_COLD_START = True
 
 
 def publish_metric(metric_name, function_name):
-    """Publish a custom CloudWatch metric with Stage and FunctionName dimensions."""
-    logger.info(f"[DEBUG] Attempting to publish metric={metric_name}, function={function_name}, stage={STAGE}")
+    """Publish a custom CloudWatch metric with Stage + FunctionName dimensions."""
     try:
-        response = cloudwatch.put_metric_data(
+        cloudwatch.put_metric_data(
             Namespace=NAMESPACE,
             MetricData=[
                 {
@@ -37,21 +36,19 @@ def publish_metric(metric_name, function_name):
                 }
             ]
         )
-        logger.info(f"[DEBUG] Successfully published metric={metric_name}, response={response}")
+        logger.info(f"Published metric {metric_name} for {function_name} stage={STAGE}")
     except Exception as e:
-        logger.error(f"[ERROR] Failed to publish metric={metric_name}: {e}")
-
+        logger.error(f"Failed to publish metric {metric_name}: {e}")
 
 
 def lambda_handler(event, context):
     global IS_COLD_START
-
     logger.info("Received event: %s", json.dumps(event))
 
-    # Use actual function name from context
+    # Get actual function name from context
     function_name = context.function_name if context else "UnknownFunction"
 
-    # Cold start detection (fires once per container lifecycle)
+    # Cold start metric (fires once per container)
     if IS_COLD_START:
         publish_metric("ColdStartCount", function_name)
         IS_COLD_START = False
@@ -63,7 +60,7 @@ def lambda_handler(event, context):
     if "requestContext" in event and "http" in event["requestContext"]:  # HTTP API v2
         method = event["requestContext"]["http"].get("method")
         path = event.get("rawPath", "/")
-    else:  # REST API v1 or test event
+    else:  # REST API v1 or test
         method = event.get("httpMethod")
         path = event.get("path", "/")
 
