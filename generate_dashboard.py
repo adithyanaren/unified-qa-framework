@@ -318,18 +318,31 @@ template = env.from_string("""
 <head>
     <title>Unified QA Dashboard</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
-        h1 { color: #2C3E50; }
+        body { font-family: Arial, sans-serif; margin: 0; background: #f8f9fa; }
+        h1 { color: #2C3E50; padding: 20px; margin: 0; }
         h2 { color: #34495E; border-bottom: 2px solid #ccc; padding-bottom: 5px; }
-        .section { margin-bottom: 40px; padding: 15px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+        .section { margin: 20px; padding: 15px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
         .metric { padding: 5px 10px; margin: 5px 0; background: #ecf0f1; border-radius: 4px; }
         iframe { width: 100%; height: 600px; border: none; }
         table { border-collapse: collapse; width: 100%; margin-top: 10px; }
         th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
+        /* Navbar */
+        .navbar { background: #2C3E50; padding: 10px 20px; }
+        .navbar a { color: white; text-decoration: none; margin-right: 15px; font-weight: bold; }
+        .navbar a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
+    <div class="navbar">
+        <a href="index.html">Dashboard</a>
+        <a href="report.html">Robot Report</a>
+        <a href="log.html">Robot Log</a>
+        <a href="harness/">Harness JSON</a>
+        <a href="cloudwatch/">CloudWatch Snapshots</a>
+    </div>
+
     <h1>Unified QA Framework - Dashboard</h1>
+
 
     <div class="section">
         <h2>PyTest Results</h2>
