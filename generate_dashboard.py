@@ -201,7 +201,7 @@ if os.path.exists(locust_history_file):
         trend_locust_html = fig_trend.to_html(full_html=False)
 
 # ================================================================
-# CloudWatch Fetch + History Append
+# CloudWatch
 # ================================================================
 def fetch_metric(namespace, metric_name, outfile, stage=None, function_name="helloLambda"):
     end = datetime.utcnow()
@@ -235,19 +235,10 @@ def fetch_metric(namespace, metric_name, outfile, stage=None, function_name="hel
         json.dump(response or {}, f, default=str)
     return response or {}
 
-def append_history(file_path, timestamp, value, colname):
-    write_header = not os.path.exists(file_path)
-    with open(file_path, "a", newline="") as f:
-        writer = csv.writer(f)
-        if write_header:
-            writer.writerow(["timestamp", colname])
-        writer.writerow([timestamp, value])
-
 # ColdStartCount
 cw_cold_json = "reports/cloudwatch/coldstart.json"
 if args.refresh or not os.path.exists(cw_cold_json):
-    fetch_metric("QAFramework/Serverless", "ColdStartCount", cw_cold_json,
-                 stage=args.stage, function_name=args.function)
+    fetch_metric("QAFramework/Serverless", "ColdStartCount", cw_cold_json, stage=args.stage, function_name=args.function)
 if os.path.exists(cw_cold_json):
     with open(cw_cold_json) as f:
         data = json.load(f)
@@ -255,13 +246,11 @@ if os.path.exists(cw_cold_json):
         datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
         latest = datapoints[-1]
         coldstart_summary = {"Sum": latest.get("Sum", 0), "Timestamp": latest.get("Timestamp")}
-        append_history(cw_history_coldstart, latest["Timestamp"], latest.get("Sum", 0), "coldstart_sum")
 
 # RequestsProcessed
 cw_processed_json = "reports/cloudwatch/requests.json"
 if args.refresh or not os.path.exists(cw_processed_json):
-    fetch_metric("QAFramework/Serverless", "RequestsProcessed", cw_processed_json,
-                 stage=args.stage, function_name=args.function)
+    fetch_metric("QAFramework/Serverless", "RequestsProcessed", cw_processed_json, stage=args.stage, function_name=args.function)
 if os.path.exists(cw_processed_json):
     with open(cw_processed_json) as f:
         data = json.load(f)
@@ -269,48 +258,8 @@ if os.path.exists(cw_processed_json):
         datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
         latest = datapoints[-1]
         requests_summary = {"Sum": latest.get("Sum", 0), "Timestamp": latest.get("Timestamp")}
-        append_history(cw_history_processed, latest["Timestamp"], latest.get("Sum", 0), "requests_sum")
 
-# ================================================================
-# Combined CloudWatch Trend (resilient)
-# ================================================================
-if os.path.exists(cw_history_coldstart) or os.path.exists(cw_history_processed):
-    try:
-        df_cold, df_proc = None, None
 
-        if os.path.exists(cw_history_coldstart):
-            df_cold = pd.read_csv(cw_history_coldstart)
-            if not df_cold.empty and "timestamp" in df_cold.columns:
-                df_cold["timestamp"] = pd.to_datetime(df_cold["timestamp"])
-
-        if os.path.exists(cw_history_processed):
-            df_proc = pd.read_csv(cw_history_processed)
-            if not df_proc.empty and "timestamp" in df_proc.columns:
-                df_proc["timestamp"] = pd.to_datetime(df_proc["timestamp"])
-
-        if df_cold is not None and not df_cold.empty and df_proc is not None and not df_proc.empty:
-            df = pd.merge(df_cold, df_proc, on="timestamp", how="outer").sort_values("timestamp")
-            fig = px.line(
-                df,
-                x="timestamp",
-                y=[col for col in ["coldstart_sum", "requests_sum"] if col in df.columns],
-                markers=True,
-                title="Combined CloudWatch Metrics (ColdStartCount & RequestsProcessed)"
-            )
-            trend_cw_combined_html = fig.to_html(full_html=False)
-
-        elif df_cold is not None and not df_cold.empty:
-            fig = px.line(df_cold, x="timestamp", y="coldstart_sum", markers=True,
-                          title="ColdStartCount Trend (only)")
-            trend_cw_combined_html = fig.to_html(full_html=False)
-
-        elif df_proc is not None and not df_proc.empty:
-            fig = px.line(df_proc, x="timestamp", y="requests_sum", markers=True,
-                          title="RequestsProcessed Trend (only)")
-            trend_cw_combined_html = fig.to_html(full_html=False)
-
-    except Exception as e:
-        print(f"⚠️ Could not build combined metrics chart: {e}")
 
 # ================================================================
 # Harness Results
