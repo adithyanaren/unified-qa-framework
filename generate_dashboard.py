@@ -246,6 +246,12 @@ if os.path.exists(cw_cold_json):
         datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
         latest = datapoints[-1]
         coldstart_summary = {"Sum": latest.get("Sum", 0), "Timestamp": latest.get("Timestamp")}
+        df_cold = pd.DataFrame(datapoints)
+        if not df_cold.empty:
+            fig_cold = px.line(df_cold, x="Timestamp", y="Sum", markers=True,
+                               title="CloudWatch - ColdStartCount Trend")
+            trend_cw_cold_html = fig_cold.to_html(full_html=False)
+
 
 # RequestsProcessed
 cw_processed_json = "reports/cloudwatch/requests.json"
@@ -258,6 +264,12 @@ if os.path.exists(cw_processed_json):
         datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
         latest = datapoints[-1]
         requests_summary = {"Sum": latest.get("Sum", 0), "Timestamp": latest.get("Timestamp")}
+        df_req = pd.DataFrame(datapoints)
+        if not df_req.empty:
+            fig_req = px.line(df_req, x="Timestamp", y="Sum", markers=True,
+                              title="CloudWatch - RequestsProcessed Trend")
+            trend_cw_processed_html = fig_req.to_html(full_html=False)
+
 
 # ================================================================
 # Combined CloudWatch Trend (Requests + Cold Starts)
@@ -337,8 +349,8 @@ template = env.from_string("""
         <a href="index.html">Dashboard</a>
         <a href="report.html">Robot Report</a>
         <a href="log.html">Robot Log</a>
-        <a href="harness/">Harness JSON</a>
-        <a href="cloudwatch/">CloudWatch Snapshots</a>
+        <a href="#harness">Harness JSON</a>
+        <a href="#cloudwatch">CloudWatch Metrics</a>
     </div>
 
     <h1>Unified QA Framework - Dashboard</h1>
@@ -408,7 +420,7 @@ template = env.from_string("""
         {% endif %}
     </div>
 
-    <div class="section">
+    <div class="section" id="harness">
         <h2>Harness Results (Lambda CRUD)</h2>
         {% if harness %}
             <table>
@@ -426,31 +438,45 @@ template = env.from_string("""
         {% endif %}
     </div>
 
-    <div class="section">
-        <h2>CloudWatch - Metrics</h2>
-        <h3>ColdStartCount</h3>
-        {% if coldstart %}
-            <div class="metric">ColdStartCount: {{ coldstart.Sum }}</div>
-            <div class="metric">Timestamp: {{ coldstart.Timestamp }}</div>
-            <div>{{ trend_cw_cold|safe }}</div>
-        {% else %}
-            <p>No ColdStartCount metrics found.</p>
-        {% endif %}
-        <h3>RequestsProcessed</h3>
-        {% if requests %}
-            <div class="metric">RequestsProcessed: {{ requests.Sum }}</div>
-            <div class="metric">Timestamp: {{ requests.Timestamp }}</div>
-            <div>{{ trend_cw_processed|safe }}</div>
-        {% else %}
-            <p>No RequestsProcessed metrics found.</p>
-        {% endif %}
-        <h3>Combined View</h3>
-        {% if trend_cw_combined %}
-            <div>{{ trend_cw_combined|safe }}</div>
-        {% else %}
-            <p>No combined metrics available.</p>
-        {% endif %}
-    </div>
+        <div class="section" id="cloudwatch">
+    <h2>CloudWatch - Metrics</h2>
+
+    <h3>ColdStartCount</h3>
+    {% if coldstart %}
+        <table>
+            <tr><th>Timestamp</th><th>ColdStartCount</th></tr>
+            <tr>
+                <td>{{ coldstart.Timestamp }}</td>
+                <td>{{ coldstart.Sum }}</td>
+            </tr>
+        </table>
+        <div>{{ trend_cw_cold|safe }}</div>
+    {% else %}
+        <p>No ColdStartCount metrics found.</p>
+    {% endif %}
+
+    <h3>RequestsProcessed</h3>
+    {% if requests %}
+        <table>
+            <tr><th>Timestamp</th><th>RequestsProcessed</th></tr>
+            <tr>
+                <td>{{ requests.Timestamp }}</td>
+                <td>{{ requests.Sum }}</td>
+            </tr>
+        </table>
+        <div>{{ trend_cw_processed|safe }}</div>
+    {% else %}
+        <p>No RequestsProcessed metrics found.</p>
+    {% endif %}
+
+    <h3>Combined View</h3>
+    {% if trend_cw_combined %}
+        <div>{{ trend_cw_combined|safe }}</div>
+    {% else %}
+        <p>No combined metrics available.</p>
+    {% endif %}
+</div>
+
 </body>
 </html>
 """)
