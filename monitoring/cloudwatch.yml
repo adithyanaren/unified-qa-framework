@@ -1,0 +1,22 @@
+region: us-east-1
+metrics:
+  - aws_namespace: AWS/Lambda
+    aws_metric_name: Invocations
+    aws_dimensions: [FunctionName]
+    aws_dimension_select:
+      FunctionName: [QAFrameworkCRUD]
+    aws_statistics: [Sum]
+
+  - aws_namespace: AWS/Lambda
+    aws_metric_name: Errors
+    aws_dimensions: [FunctionName]
+    aws_dimension_select:
+      FunctionName: [QAFrameworkCRUD]
+    aws_statistics: [Sum]
+
+  - aws_namespace: AWS/Lambda
+    aws_metric_name: Duration
+    aws_dimensions: [FunctionName]
+    aws_dimension_select:
+      FunctionName: [QAFrameworkCRUD]
+    aws_statistics: [Average]

@@ -182,6 +182,20 @@ jobs:
           cp reports/robot/report.html reports/report.html
           cp reports/robot/log.html reports/log.html
 
+      - name: Export CI metrics to Prometheus Pushgateway
+        run: |
+          PUSHGATEWAY_URL="http://your-server-ip:9091/metrics/job/qa-framework/instance=github-actions"
+
+          PYTEST_FAILS=$(grep -c '<failure' reports/pytest/results.xml || echo 0)
+          ROBOT_FAILS=$(grep -c 'status="FAIL"' reports/robot/output.xml || echo 0)
+          LOCUST_RPS=$(awk -F',' 'NR>1 {print $2}' reports/locust/results_stats.csv | tail -n 1)
+
+          echo "ci_pipeline_success 1" | curl -s -S -f --data-binary @- $PUSHGATEWAY_URL
+          echo "pytest_failures $PYTEST_FAILS" | curl -s -S -f --data-binary @- $PUSHGATEWAY_URL
+          echo "robot_failures $ROBOT_FAILS" | curl -s -S -f --data-binary @- $PUSHGATEWAY_URL
+          echo "locust_rps $LOCUST_RPS" | curl -s -S -f --data-binary @- $PUSHGATEWAY_URL
+
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:

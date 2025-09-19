@@ -1,0 +1,146 @@
+{
+  "id": null,
+  "title": "Unified QA Framework Dashboard",
+  "tags": ["QA", "Unified", "Locust", "AWS Lambda", "Node"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "row",
+      "title": "Locust Load Test Metrics",
+      "collapsed": true,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Requests per Second (RPS)",
+          "targets": [
+            { "expr": "locust_requests_total", "legendFormat": "RPS" }
+          ],
+          "gridPos": { "x": 0, "y": 1, "w": 12, "h": 8 }
+        },
+        {
+          "type": "timeseries",
+          "title": "Locust Failures",
+          "targets": [
+            { "expr": "locust_failures_total", "legendFormat": "Failures" }
+          ],
+          "gridPos": { "x": 12, "y": 1, "w": 12, "h": 8 }
+        },
+        {
+          "type": "timeseries",
+          "title": "Latency Percentiles",
+          "targets": [
+            { "expr": "histogram_quantile(0.5, sum(rate(locust_response_time_seconds_bucket[1m])) by (le))", "legendFormat": "p50" },
+            { "expr": "histogram_quantile(0.9, sum(rate(locust_response_time_seconds_bucket[1m])) by (le))", "legendFormat": "p90" },
+            { "expr": "histogram_quantile(0.99, sum(rate(locust_response_time_seconds_bucket[1m])) by (le))", "legendFormat": "p99" }
+          ],
+          "gridPos": { "x": 0, "y": 9, "w": 24, "h": 8 }
+        },
+        {
+          "type": "timeseries",
+          "title": "Active Users (Concurrency)",
+          "targets": [
+            { "expr": "locust_users", "legendFormat": "Users" }
+          ],
+          "gridPos": { "x": 0, "y": 17, "w": 24, "h": 8 }
+        }
+      ]
+    },
+
+    {
+      "type": "row",
+      "title": "Node Exporter Metrics",
+      "collapsed": true,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "CPU Usage %",
+          "targets": [
+            {
+              "expr": "100 - (avg by(instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+              "legendFormat": "{{instance}}"
+            }
+          ],
+          "gridPos": { "x": 0, "y": 25, "w": 12, "h": 8 }
+        },
+        {
+          "type": "timeseries",
+          "title": "Memory Usage %",
+          "targets": [
+            {
+              "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+              "legendFormat": "{{instance}}"
+            }
+          ],
+          "gridPos": { "x": 12, "y": 25, "w": 12, "h": 8 }
+        },
+        {
+          "type": "timeseries",
+          "title": "Network Traffic",
+          "targets": [
+            { "expr": "irate(node_network_receive_bytes_total[5m])", "legendFormat": "{{instance}} RX" },
+            { "expr": "irate(node_network_transmit_bytes_total[5m])", "legendFormat": "{{instance}} TX" }
+          ],
+          "gridPos": { "x": 0, "y": 33, "w": 24, "h": 8 }
+        }
+      ]
+    },
+
+    {
+      "type": "row",
+      "title": "AWS Lambda Metrics (CloudWatch Exporter)",
+      "collapsed": true,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Lambda Invocations",
+          "targets": [
+            {
+              "expr": "aws_lambda_invocations_sum{function_name=\"QAFrameworkCRUD\"}",
+              "legendFormat": "Invocations"
+            }
+          ],
+          "gridPos": { "x": 0, "y": 41, "w": 12, "h": 8 }
+        },
+        {
+          "type": "timeseries",
+          "title": "Lambda Errors",
+          "targets": [
+            {
+              "expr": "aws_lambda_errors_sum{function_name=\"QAFrameworkCRUD\"}",
+              "legendFormat": "Errors"
+            }
+          ],
+          "gridPos": { "x": 12, "y": 41, "w": 12, "h": 8 }
+        },
+        {
+          "type": "timeseries",
+          "title": "Lambda Duration (ms)",
+          "targets": [
+            {
+              "expr": "aws_lambda_duration_average{function_name=\"QAFrameworkCRUD\"}",
+              "legendFormat": "Duration"
+            }
+          ],
+          "gridPos": { "x": 0, "y": 49, "w": 24, "h": 8 }
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "type": "dashboard",
+        "name": "Annotations & Alerts",
+        "enable": true,
+        "hide": false
+      }
+    ]
+  }
+}
