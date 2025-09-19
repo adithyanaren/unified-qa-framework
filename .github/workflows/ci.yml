@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test-deploy:
-    runs-on: ubuntu-latest
+    runs-on: runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -184,7 +184,7 @@ jobs:
 
       - name: Export CI metrics to Prometheus Pushgateway
         run: |
-          PUSHGATEWAY_URL="http://your-server-ip:9091/metrics/job/qa-framework/instance=github-actions"
+          PUSHGATEWAY_URL="http://localhost:9091/metrics/job/qa-framework/instance=github-actions"
 
           PYTEST_FAILS=$(grep -c '<failure' reports/pytest/results.xml || echo 0)
           ROBOT_FAILS=$(grep -c 'status="FAIL"' reports/robot/output.xml || echo 0)
