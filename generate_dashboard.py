@@ -203,7 +203,7 @@ if os.path.exists(locust_history_file):
 # ================================================================
 # CloudWatch
 # ================================================================
-def fetch_metric(namespace, metric_name, outfile, stage=None, function_name="helloLambda"):
+def fetch_metric(namespace, metric_name, outfile, stage=None, function_name="QAFrameworkCRUD"):
     end = datetime.utcnow()
     start = end - timedelta(hours=6)
     dimension_sets = []
@@ -212,7 +212,9 @@ def fetch_metric(namespace, metric_name, outfile, stage=None, function_name="hel
             {"Name": "Stage", "Value": stage},
             {"Name": "FunctionName", "Value": function_name}
         ])
+    # Always try FunctionName-only as fallback
     dimension_sets.append([{"Name": "FunctionName", "Value": function_name}])
+
     response = None
     for dims in dimension_sets:
         try:
@@ -226,14 +228,19 @@ def fetch_metric(namespace, metric_name, outfile, stage=None, function_name="hel
                 Statistics=["Sum"]
             )
             if resp.get("Datapoints"):
+                print(f"✅ {metric_name} found with dimensions {dims}")
                 response = resp
                 break
+            else:
+                print(f"ℹ️ No datapoints for {metric_name} with {dims}")
         except Exception as e:
             print(f"⚠️ Failed with dimensions {dims}: {e}")
+
     os.makedirs(os.path.dirname(outfile), exist_ok=True)
     with open(outfile, "w") as f:
         json.dump(response or {}, f, default=str)
     return response or {}
+
 
 # ColdStartCount
 cw_cold_json = "reports/cloudwatch/coldstart.json"
