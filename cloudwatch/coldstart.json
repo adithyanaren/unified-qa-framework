@@ -1,1 +1,1 @@
-{"Label": "ColdStartCount", "Datapoints": [{"Timestamp": "2025-09-16 12:06:00+00:00", "Sum": 1.0, "Unit": "Count"}, {"Timestamp": "2025-09-16 12:16:00+00:00", "Sum": 1.0, "Unit": "Count"}, {"Timestamp": "2025-09-16 12:31:00+00:00", "Sum": 4.0, "Unit": "Count"}], "ResponseMetadata": {"RequestId": "a9bbff40-728a-498b-845e-8690609a0ee7", "HTTPStatusCode": 200, "HTTPHeaders": {"x-amzn-requestid": "a9bbff40-728a-498b-845e-8690609a0ee7", "content-type": "text/xml", "content-length": "753", "date": "Tue, 16 Sep 2025 13:46:10 GMT"}, "RetryAttempts": 0}}
+{}
