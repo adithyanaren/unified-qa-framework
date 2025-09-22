@@ -19,4 +19,11 @@ metrics:
     aws_dimensions: [FunctionName]
     aws_dimension_select:
       FunctionName: [QAFrameworkCRUD]
+    aws_statistics: [Average, Maximum]
+
+  - aws_namespace: AWS/Lambda
+    aws_metric_name: InitDuration
+    aws_dimensions: [FunctionName]
+    aws_dimension_select:
+      FunctionName: [QAFrameworkCRUD]
     aws_statistics: [Average]

@@ -1,13 +1,7 @@
 global:
   scrape_interval: 5s
-  evaluation_interval: 5s
 
 scrape_configs:
-  # Prometheus itself
-  - job_name: "prometheus"
-    static_configs:
-      - targets: ["localhost:9090"]
-
   # Locust metrics
   - job_name: "locust"
     metrics_path: /metrics
@@ -25,10 +19,8 @@ scrape_configs:
   - job_name: "cloudwatch"
     static_configs:
       - targets:
-          - "cloudwatch-exporter:9106"
+          - "host.docker.internal:9106"
 
-  # CI/CD metrics pushed from GitHub Actions
-  - job_name: "pushgateway"
-    honor_labels: true
+  - job_name: 'pushgateway'
     static_configs:
-      - targets: ["pushgateway:9091"]
+      - targets: ['pushgateway:9091']
