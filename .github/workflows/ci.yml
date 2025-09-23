@@ -76,9 +76,13 @@ jobs:
           FAILURES=$(awk -F',' 'NR>1 {sum+=$3} END {print sum}' $LOCUST_CSV)
           AVG_LATENCY=$(awk -F',' 'NR>1 {sum+=$5; count++} END {if(count>0) print sum/count; else print 0}' $LOCUST_CSV)
 
-          echo "locust_requests_total $REQUESTS" | curl --data-binary @- https://homelike-lobularly-nilsa.ngrok-free.dev/metrics/job/locust/instance=github-actions
-          echo "locust_failures_total $FAILURES" | curl --data-binary @- https://homelike-lobularly-nilsa.ngrok-free.dev/metrics/job/locust/instance=github-actions
-          echo "locust_avg_latency_ms $AVG_LATENCY" | curl --data-binary @- https://homelike-lobularly-nilsa.ngrok-free.dev/metrics/job/locust/instance=github-actions
+          # Write to .prom files
+          echo "locust_requests_total $REQUESTS"   >  locust.prom
+          echo "locust_failures_total $FAILURES" >> locust.prom
+          echo "locust_avg_latency_ms $AVG_LATENCY" >> locust.prom
+
+          # Push to Pushgateway via ngrok
+          curl --data-binary "@locust.prom" https://homelike-lobularly-nilsa.ngrok-free.dev/metrics/job/locust/instance/github-actions
 
           echo "✅ Locust metrics pushed to Pushgateway"
 
