@@ -6,68 +6,84 @@ import os
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# CloudWatch client
+# -------------------------------
+# AWS Clients
+# -------------------------------
 cloudwatch = boto3.client("cloudwatch")
+dynamodb = boto3.resource("dynamodb")
+
+# -------------------------------
+# Config
+# -------------------------------
 NAMESPACE = "QAFramework/Serverless"
 STAGE = os.getenv("STAGE", "dev")
+TABLE_NAME = os.getenv("TABLE_NAME", "ItemsTable")
+table = dynamodb.Table(TABLE_NAME)
 
-# DynamoDB table
-dynamodb = boto3.resource("dynamodb")
-table = dynamodb.Table(os.getenv("TABLE_NAME", "ItemsTable"))
-
+# -------------------------------
 # Cold start detection
+# -------------------------------
 IS_COLD_START = True
 
 
-def publish_metric(metric_name, function_name):
-    """Publish a custom CloudWatch metric with Stage + FunctionName dimensions."""
+def publish_metrics(function_name, is_cold_start):
+    """Publish CloudWatch metrics for RequestsProcessed and ColdStartCount."""
     try:
-        cloudwatch.put_metric_data(
-            Namespace=NAMESPACE,
-            MetricData=[
+        metric_data = [
+            {
+                "MetricName": "RequestsProcessed",
+                "Dimensions": [
+                    {"Name": "FunctionName", "Value": function_name},
+                    {"Name": "Stage", "Value": STAGE},
+                ],
+                "Value": 1,
+                "Unit": "Count",
+            }
+        ]
+
+        if is_cold_start:
+            metric_data.append(
                 {
-                    "MetricName": metric_name,
+                    "MetricName": "ColdStartCount",
                     "Dimensions": [
                         {"Name": "FunctionName", "Value": function_name},
-                        {"Name": "Stage", "Value": STAGE}
+                        {"Name": "Stage", "Value": STAGE},
                     ],
                     "Value": 1,
-                    "Unit": "Count"
+                    "Unit": "Count",
                 }
-            ]
-        )
-        logger.info(f"Published metric {metric_name} for {function_name} stage={STAGE}")
+            )
+
+        cloudwatch.put_metric_data(Namespace=NAMESPACE, MetricData=metric_data)
+        logger.info(f"Published metrics: {metric_data}")
+
     except Exception as e:
-        logger.error(f"Failed to publish metric {metric_name}: {e}")
+        logger.error(f"Failed to publish metrics: {e}")
 
 
 def lambda_handler(event, context):
     global IS_COLD_START
     logger.info("Received event: %s", json.dumps(event))
 
-    # Get actual function name from context
     function_name = context.function_name if context else "UnknownFunction"
 
-    # Cold start metric (fires once per container)
-    if IS_COLD_START:
-        publish_metric("ColdStartCount", function_name)
-        IS_COLD_START = False
+    # Publish metrics (batch)
+    publish_metrics(function_name, IS_COLD_START)
+    IS_COLD_START = False
 
-    # Always track requests
-    publish_metric("RequestsProcessed", function_name)
-
-    # Detect method + path
+    # Extract method and path
     if "requestContext" in event and "http" in event["requestContext"]:  # HTTP API v2
         method = event["requestContext"]["http"].get("method")
         path = event.get("rawPath", "/")
-    else:  # REST API v1 or test
+    else:  # REST API v1 or direct invoke
         method = event.get("httpMethod")
         path = event.get("path", "/")
 
+    # Common headers
     cors_headers = {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type,Authorization"
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
     }
 
     if method == "OPTIONS":
@@ -79,40 +95,86 @@ def lambda_handler(event, context):
             return {
                 "statusCode": 200,
                 "headers": {**cors_headers, "Content-Type": "application/json"},
-                "body": '{"message": "Hello from Lambda CRUD API!"}'
+                "body": json.dumps({"message": "Hello from Lambda CRUD API!"}),
             }
 
         # POST /items
         elif path == f"/{STAGE}/items" and method == "POST":
-            body = json.loads(event["body"])
+            body = json.loads(event.get("body", "{}"))
+            if "id" not in body:
+                return {
+                    "statusCode": 400,
+                    "headers": cors_headers,
+                    "body": json.dumps({"error": "Missing 'id' in request body"}),
+                }
             table.put_item(Item=body)
-            return {"statusCode": 200, "headers": cors_headers,
-                    "body": json.dumps({"message": "Item created", "item": body})}
+            return {
+                "statusCode": 200,
+                "headers": cors_headers,
+                "body": json.dumps({"message": "Item created", "item": body}),
+            }
 
         # GET /items?id=123
         elif path == f"/{STAGE}/items" and method == "GET":
-            item_id = event["queryStringParameters"]["id"]
+            params = event.get("queryStringParameters") or {}
+            item_id = params.get("id")
+            if not item_id:
+                return {
+                    "statusCode": 400,
+                    "headers": cors_headers,
+                    "body": json.dumps({"error": "Missing 'id' parameter"}),
+                }
             response = table.get_item(Key={"id": item_id})
-            return {"statusCode": 200, "headers": cors_headers,
-                    "body": json.dumps(response.get("Item", {}))}
+            return {
+                "statusCode": 200,
+                "headers": cors_headers,
+                "body": json.dumps(response.get("Item", {})),
+            }
 
         # PUT /items
         elif path == f"/{STAGE}/items" and method == "PUT":
-            body = json.loads(event["body"])
+            body = json.loads(event.get("body", "{}"))
+            if "id" not in body:
+                return {
+                    "statusCode": 400,
+                    "headers": cors_headers,
+                    "body": json.dumps({"error": "Missing 'id' in request body"}),
+                }
             table.put_item(Item=body)
-            return {"statusCode": 200, "headers": cors_headers,
-                    "body": json.dumps({"message": "Item updated", "item": body})}
+            return {
+                "statusCode": 200,
+                "headers": cors_headers,
+                "body": json.dumps({"message": "Item updated", "item": body}),
+            }
 
         # DELETE /items?id=123
         elif path == f"/{STAGE}/items" and method == "DELETE":
-            item_id = event["queryStringParameters"]["id"]
+            params = event.get("queryStringParameters") or {}
+            item_id = params.get("id")
+            if not item_id:
+                return {
+                    "statusCode": 400,
+                    "headers": cors_headers,
+                    "body": json.dumps({"error": "Missing 'id' parameter"}),
+                }
             table.delete_item(Key={"id": item_id})
-            return {"statusCode": 200, "headers": cors_headers,
-                    "body": json.dumps({"message": f"Item {item_id} deleted"})}
+            return {
+                "statusCode": 200,
+                "headers": cors_headers,
+                "body": json.dumps({"message": f"Item {item_id} deleted"}),
+            }
 
         else:
-            return {"statusCode": 404, "headers": cors_headers, "body": '{"error": "Not Found"}'}
+            return {
+                "statusCode": 404,
+                "headers": cors_headers,
+                "body": json.dumps({"error": "Not Found"}),
+            }
 
     except Exception as e:
         logger.error(f"Error: {str(e)}")
-        return {"statusCode": 500, "headers": cors_headers, "body": json.dumps({"error": str(e)})}
+        return {
+            "statusCode": 500,
+            "headers": cors_headers,
+            "body": json.dumps({"error": str(e)}),
+        }

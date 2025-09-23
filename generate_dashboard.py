@@ -59,6 +59,53 @@ parser.add_argument("--function", type=str, default="QAFrameworkCRUD",
 args, _ = parser.parse_known_args()
 
 cw = boto3.client("cloudwatch")
+lambda_client = boto3.client("lambda")
+
+os.makedirs("reports/cloudwatch", exist_ok=True)
+os.makedirs("reports/harness", exist_ok=True)
+os.makedirs("reports/robot", exist_ok=True)
+
+# ================================================================
+# Harness Logic - Invoke Lambda Events
+# ================================================================
+event_files = [
+    "event_root.json",
+    "event_create.json",
+    "event_read.json",
+    "event_update.json",
+    "event_delete.json",
+]
+
+for ev in event_files:
+    if not os.path.exists(ev):
+        continue
+    try:
+        with open(ev) as f:
+            payload = json.load(f)
+
+        response = lambda_client.invoke(
+            FunctionName=args.function,
+            InvocationType="RequestResponse",
+            Payload=json.dumps(payload),
+        )
+
+        resp_payload = response["Payload"].read().decode("utf-8")
+        resp_json = json.loads(resp_payload) if resp_payload else {}
+
+        out_path = os.path.join(harness_dir, ev.replace(".json", ".json"))
+        with open(out_path, "w") as outf:
+            json.dump(resp_json, outf, indent=2)
+
+        harness_results.append({
+            "event": ev,
+            "status": response.get("StatusCode", "?"),
+            "body": resp_json
+        })
+        print(f"✅ Invoked {ev}, status {response.get('StatusCode')}")
+
+    except Exception as e:
+        harness_results.append({"event": ev, "status": "error", "body": str(e)})
+        print(f"⚠️ Failed to invoke {ev}: {e}")
 
 # ================================================================
 # PyTest
@@ -164,7 +211,8 @@ if os.path.exists(locust_csv):
 
     col_requests = next((c for c in df.columns if "request count" in c.lower() or "requests" in c.lower()), None)
     col_failures = next((c for c in df.columns if "failure count" in c.lower() or c.lower() == "failures"), None)
-    col_avg_time = next((c for c in df.columns if "average response time" in c.lower() or "avg response time" in c.lower()), None)
+    col_avg_time = next(
+        (c for c in df.columns if "average response time" in c.lower() or "avg response time" in c.lower()), None)
 
     if col_requests and col_failures and col_avg_time:
         locust_summary = {
@@ -200,132 +248,72 @@ if os.path.exists(locust_history_file):
                             title="Locust Trend (Avg Response Time & Failures over time)")
         trend_locust_html = fig_trend.to_html(full_html=False)
 
+
 # ================================================================
-# CloudWatch
+# CloudWatch Metrics (RequestsProcessed + ColdStartCount)
 # ================================================================
-def fetch_metric(namespace, metric_name, outfile, stage=None, function_name="QAFrameworkCRUD"):
+def fetch_metric(metric_name, history_file, label):
     end = datetime.utcnow()
-    start = end - timedelta(hours=6)
-    dimension_sets = []
-    if stage:
-        dimension_sets.append([
-            {"Name": "Stage", "Value": stage},
-            {"Name": "FunctionName", "Value": function_name}
-        ])
-    # Always try FunctionName-only as fallback
-    dimension_sets.append([{"Name": "FunctionName", "Value": function_name}])
+    # Extended lookback window to 2 hours (was 30 minutes)
+    start = end - timedelta(hours=2)
 
-    response = None
-    for dims in dimension_sets:
-        try:
-            resp = cw.get_metric_statistics(
-                Namespace=namespace,
-                MetricName=metric_name,
-                Dimensions=dims,
-                StartTime=start,
-                EndTime=end,
-                Period=300,
-                Statistics=["Sum"]
-            )
-            if resp.get("Datapoints"):
-                print(f"✅ {metric_name} found with dimensions {dims}")
-                response = resp
-                break
-            else:
-                print(f"ℹ️ No datapoints for {metric_name} with {dims}")
-        except Exception as e:
-            print(f"⚠️ Failed with dimensions {dims}: {e}")
+    response = cw.get_metric_statistics(
+        Namespace="QAFramework/Serverless",
+        MetricName=metric_name,
+        Dimensions=[
+            {"Name": "FunctionName", "Value": args.function},
+            {"Name": "Stage", "Value": args.stage}
+        ],
+        StartTime=start,
+        EndTime=end,
+        Period=60,
+        Statistics=["Sum"]
+    )
 
-    os.makedirs(os.path.dirname(outfile), exist_ok=True)
-    with open(outfile, "w") as f:
-        json.dump(response or {}, f, default=str)
-    return response or {}
-
-
-# ColdStartCount
-cw_cold_json = "reports/cloudwatch/coldstart.json"
-if args.refresh or not os.path.exists(cw_cold_json):
-    fetch_metric("QAFramework/Serverless", "ColdStartCount", cw_cold_json, stage=args.stage, function_name=args.function)
-if os.path.exists(cw_cold_json):
-    with open(cw_cold_json) as f:
-        data = json.load(f)
-    if data.get("Datapoints"):
-        datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
+    datapoints = response.get("Datapoints", [])
+    if datapoints:
+        # sort datapoints so we can reliably take the latest
+        datapoints = sorted(datapoints, key=lambda x: x["Timestamp"])
         latest = datapoints[-1]
-        coldstart_summary = {"Sum": latest.get("Sum", 0), "Timestamp": latest.get("Timestamp")}
-        df_cold = pd.DataFrame(datapoints)
-        if not df_cold.empty:
-            fig_cold = px.line(df_cold, x="Timestamp", y="Sum", markers=True,
-                               title="CloudWatch - ColdStartCount Trend")
-            trend_cw_cold_html = fig_cold.to_html(full_html=False)
+        summary = {"Sum": latest["Sum"], "Timestamp": str(latest["Timestamp"])}
+
+        # Save history to CSV
+        write_header = not os.path.exists(history_file)
+        with open(history_file, "a", newline="") as f:
+            writer = csv.writer(f)
+            if write_header:
+                writer.writerow(["timestamp", label])
+            writer.writerow([summary["Timestamp"], summary["Sum"]])
+
+        df = pd.DataFrame(datapoints)
+        df = df.sort_values("Timestamp")
+        fig = px.line(df, x="Timestamp", y="Sum", markers=True,
+                      title=f"CloudWatch - {label}")
+        return summary, df, fig.to_html(full_html=False)
+    return None, None, None
 
 
-# RequestsProcessed
-cw_processed_json = "reports/cloudwatch/requests.json"
-if args.refresh or not os.path.exists(cw_processed_json):
-    fetch_metric("QAFramework/Serverless", "RequestsProcessed", cw_processed_json, stage=args.stage, function_name=args.function)
-if os.path.exists(cw_processed_json):
-    with open(cw_processed_json) as f:
-        data = json.load(f)
-    if data.get("Datapoints"):
-        datapoints = sorted(data["Datapoints"], key=lambda d: d["Timestamp"])
-        latest = datapoints[-1]
-        requests_summary = {"Sum": latest.get("Sum", 0), "Timestamp": latest.get("Timestamp")}
-        df_req = pd.DataFrame(datapoints)
-        if not df_req.empty:
-            fig_req = px.line(df_req, x="Timestamp", y="Sum", markers=True,
-                              title="CloudWatch - RequestsProcessed Trend")
-            trend_cw_processed_html = fig_req.to_html(full_html=False)
+coldstart_summary, df_cold, trend_cw_cold_html = fetch_metric(
+    "ColdStartCount", cw_history_coldstart, "ColdStartCount"
+)
+requests_summary, df_req, trend_cw_processed_html = fetch_metric(
+    "RequestsProcessed", cw_history_processed, "RequestsProcessed"
+)
 
-
-# ================================================================
-# Combined CloudWatch Trend (Requests + Cold Starts)
-# ================================================================
-if os.path.exists(cw_cold_json) and os.path.exists(cw_processed_json):
-    try:
-        with open(cw_cold_json) as f:
-            cold_data = json.load(f)
-        with open(cw_processed_json) as f:
-            req_data = json.load(f)
-
-        cold_points = sorted(cold_data.get("Datapoints", []), key=lambda d: d["Timestamp"])
-        req_points = sorted(req_data.get("Datapoints", []), key=lambda d: d["Timestamp"])
-
-        if cold_points and req_points:
-            df_cold = pd.DataFrame(cold_points)[["Timestamp", "Sum"]].rename(columns={"Sum": "ColdStartCount"})
-            df_req = pd.DataFrame(req_points)[["Timestamp", "Sum"]].rename(columns={"Sum": "RequestsProcessed"})
-            df = pd.merge(df_cold, df_req, on="Timestamp", how="outer").sort_values("Timestamp")
-
-            fig_combined = px.line(
-                df,
-                x="Timestamp",
-                y=["ColdStartCount", "RequestsProcessed"],
-                markers=True,
-                title="Combined View - Requests vs Cold Starts"
-            )
-            trend_cw_combined_html = fig_combined.to_html(full_html=False)
-
-    except Exception as e:
-        print(f"⚠️ Failed to generate combined trend: {e}")
-
-
-# ================================================================
-# Harness Results
-# ================================================================
-if os.path.exists(harness_dir):
-    for f in sorted(os.listdir(harness_dir)):
-        if f.endswith(".json"):
-            path = os.path.join(harness_dir, f)
-            try:
-                with open(path) as jf:
-                    data = json.load(jf)
-                    harness_results.append({
-                        "event": f.replace(".json", ""),
-                        "status": data.get("statusCode", "?"),
-                        "body": data.get("body", "")
-                    })
-            except Exception as e:
-                harness_results.append({"event": f, "status": "error", "body": str(e)})
+# Combined chart
+if df_cold is not None and df_req is not None:
+    df_combined = pd.merge(
+        df_cold.rename(columns={"Sum": "ColdStartCount"}),
+        df_req.rename(columns={"Sum": "RequestsProcessed"}),
+        on="Timestamp", how="outer"
+    ).sort_values("Timestamp")
+    fig_combined = px.line(
+        df_combined, x="Timestamp",
+        y=["ColdStartCount", "RequestsProcessed"],
+        markers=True,
+        title="Combined View - Requests vs Cold Starts"
+    )
+    trend_cw_combined_html = fig_combined.to_html(full_html=False)
 
 # ================================================================
 # HTML Template
@@ -345,7 +333,6 @@ template = env.from_string("""
         iframe { width: 100%; height: 600px; border: none; }
         table { border-collapse: collapse; width: 100%; margin-top: 10px; }
         th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
-        /* Navbar */
         .navbar { background: #2C3E50; padding: 10px 20px; }
         .navbar a { color: white; text-decoration: none; margin-right: 15px; font-weight: bold; }
         .navbar a:hover { text-decoration: underline; }
@@ -361,7 +348,6 @@ template = env.from_string("""
     </div>
 
     <h1>Unified QA Framework - Dashboard</h1>
-
 
     <div class="section">
         <h2>PyTest Results</h2>
@@ -436,7 +422,7 @@ template = env.from_string("""
                 <tr>
                     <td>{{ h.event }}</td>
                     <td>{{ h.status }}</td>
-                    <td><pre>{{ h.body }}</pre></td>
+                    <td><pre>{{ h.body | tojson(indent=2) }}</pre></td>
                 </tr>
                 {% endfor %}
             </table>
@@ -445,44 +431,44 @@ template = env.from_string("""
         {% endif %}
     </div>
 
-        <div class="section" id="cloudwatch">
-    <h2>CloudWatch - Metrics</h2>
+    <div class="section" id="cloudwatch">
+        <h2>CloudWatch - Metrics</h2>
 
-    <h3>ColdStartCount</h3>
-    {% if coldstart %}
-        <table>
-            <tr><th>Timestamp</th><th>ColdStartCount</th></tr>
-            <tr>
-                <td>{{ coldstart.Timestamp }}</td>
-                <td>{{ coldstart.Sum }}</td>
-            </tr>
-        </table>
-        <div>{{ trend_cw_cold|safe }}</div>
-    {% else %}
-        <p>No ColdStartCount metrics found.</p>
-    {% endif %}
+        <h3>ColdStartCount</h3>
+        {% if coldstart %}
+            <table>
+                <tr><th>Timestamp</th><th>ColdStartCount</th></tr>
+                <tr>
+                    <td>{{ coldstart.Timestamp }}</td>
+                    <td>{{ coldstart.Sum }}</td>
+                </tr>
+            </table>
+            <div>{{ trend_cw_cold|safe }}</div>
+        {% else %}
+            <p>No ColdStartCount metrics found.</p>
+        {% endif %}
 
-    <h3>RequestsProcessed</h3>
-    {% if requests %}
-        <table>
-            <tr><th>Timestamp</th><th>RequestsProcessed</th></tr>
-            <tr>
-                <td>{{ requests.Timestamp }}</td>
-                <td>{{ requests.Sum }}</td>
-            </tr>
-        </table>
-        <div>{{ trend_cw_processed|safe }}</div>
-    {% else %}
-        <p>No RequestsProcessed metrics found.</p>
-    {% endif %}
+        <h3>RequestsProcessed</h3>
+        {% if requests %}
+            <table>
+                <tr><th>Timestamp</th><th>RequestsProcessed</th></tr>
+                <tr>
+                    <td>{{ requests.Timestamp }}</td>
+                    <td>{{ requests.Sum }}</td>
+                </tr>
+            </table>
+            <div>{{ trend_cw_processed|safe }}</div>
+        {% else %}
+            <p>No RequestsProcessed metrics found.</p>
+        {% endif %}
 
-    <h3>Combined View</h3>
-    {% if trend_cw_combined %}
-        <div>{{ trend_cw_combined|safe }}</div>
-    {% else %}
-        <p>No combined metrics available.</p>
-    {% endif %}
-</div>
+        <h3>Combined View</h3>
+        {% if trend_cw_combined %}
+            <div>{{ trend_cw_combined|safe }}</div>
+        {% else %}
+            <p>No combined metrics available.</p>
+        {% endif %}
+    </div>
 
 </body>
 </html>
@@ -509,7 +495,6 @@ html_out = template.render(
     harness=harness_results
 )
 
-os.makedirs("reports/robot", exist_ok=True)
 with open("reports/robot/Dashboard.html", "w", encoding="utf-8") as f:
     f.write(html_out)
 

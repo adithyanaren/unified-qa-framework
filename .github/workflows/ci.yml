@@ -17,11 +17,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python (force path)
-        run: |
-          echo "##[group]Forcing Python 3.11"
-          echo "C:\Users\adith\AppData\Local\Programs\Python\Python311" >> $GITHUB_PATH
-          echo "##[endgroup]"
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
       - name: Verify Python version
         run: python --version
@@ -145,6 +144,27 @@ jobs:
           invoke_and_save update '{"httpMethod":"PUT","path":"/dev/items","body":"{\"id\":\"ci123\",\"name\":\"Updated CI Item\"}"}'
           invoke_and_save delete '{"httpMethod":"DELETE","path":"/dev/items","queryStringParameters":{"id":"ci123"}}'
 
+      - name: Fetch CloudWatch metrics (RequestsProcessed + ColdStartCount)
+        run: |
+          mkdir -p reports/cloudwatch
+          aws cloudwatch get-metric-statistics \
+            --namespace "QAFramework/Serverless" \
+            --metric-name RequestsProcessed \
+            --dimensions Name=FunctionName,Value=QAFrameworkCRUD Name=Stage,Value=dev \
+            --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+            --period 60 \
+            --statistics Sum > reports/cloudwatch/requests.json
+
+          aws cloudwatch get-metric-statistics \
+            --namespace "QAFramework/Serverless" \
+            --metric-name ColdStartCount \
+            --dimensions Name=FunctionName,Value=QAFrameworkCRUD Name=Stage,Value=dev \
+            --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+            --period 60 \
+            --statistics Sum > reports/cloudwatch/coldstart.json
+
       - name: Check ColdStartCount threshold
         run: |
           COUNT=$(jq -r '.Datapoints[0].Sum // 0' reports/cloudwatch/coldstart.json || echo 0)
@@ -186,22 +206,8 @@ jobs:
           cp reports/robot/report.html reports/report.html
           cp reports/robot/log.html reports/log.html
 
-#      - name: Export CI metrics to Prometheus Pushgateway
-#        run: |
-#          PUSHGATEWAY_URL="http://localhost:9091/metrics/job/qa-framework/instance=github-actions"
-#
-#          PYTEST_FAILS=$(grep -c '<failure' reports/pytest/results.xml || echo 0)
-#          ROBOT_FAILS=$(grep -c 'status="FAIL"' reports/robot/output.xml || echo 0)
-#          LOCUST_RPS=$(awk -F',' 'NR>1 {print $2}' reports/locust/results_stats.csv | tail -n 1)
-#
-#          echo "ci_pipeline_success 1" | curl -s -S -f --data-binary @- $PUSHGATEWAY_URL
-#          echo "pytest_failures $PYTEST_FAILS" | curl -s -S -f --data-binary @- $PUSHGATEWAY_URL
-#          echo "robot_failures $ROBOT_FAILS" | curl -s -S -f --data-binary @- $PUSHGATEWAY_URL
-#          echo "locust_rps $LOCUST_RPS" | curl -s -S -f --data-binary @- $PUSHGATEWAY_URL
-#
-#
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: reports   # ✅ publish this fold
+          publish_dir: reports
