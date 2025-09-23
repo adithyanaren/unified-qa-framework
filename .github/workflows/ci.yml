@@ -12,6 +12,12 @@ permissions:
 jobs:
   test-deploy:
     runs-on: ubuntu-latest
+    services:
+      pushgateway:
+        image: prom/pushgateway:latest
+        ports:
+          - 9091:9091
+
 
     steps:
       - name: Checkout code
@@ -59,6 +65,23 @@ jobs:
               -u 10 -r 2 -t 1m \
               --host https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev \
               --csv reports/locust/results
+
+      - name: Push Locust results to Prometheus Pushgateway
+        run: |
+          echo "=== Pushing Locust metrics to Pushgateway ==="
+          LOCUST_CSV="reports/locust/results_stats.csv"
+
+          # Extract values from Locust CSV
+          REQUESTS=$(awk -F',' 'NR>1 {sum+=$2} END {print sum}' $LOCUST_CSV)
+          FAILURES=$(awk -F',' 'NR>1 {sum+=$3} END {print sum}' $LOCUST_CSV)
+          AVG_LATENCY=$(awk -F',' 'NR>1 {sum+=$5; count++} END {if(count>0) print sum/count; else print 0}' $LOCUST_CSV)
+
+          echo "locust_requests_total $REQUESTS" | curl --data-binary @- https://homelike-lobularly-nilsa.ngrok-free.dev/metrics/job/locust/instance=github-actions
+          echo "locust_failures_total $FAILURES" | curl --data-binary @- https://homelike-lobularly-nilsa.ngrok-free.dev/metrics/job/locust/instance=github-actions
+          echo "locust_avg_latency_ms $AVG_LATENCY" | curl --data-binary @- https://homelike-lobularly-nilsa.ngrok-free.dev/metrics/job/locust/instance=github-actions
+
+          echo "✅ Locust metrics pushed to Pushgateway"
+
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
