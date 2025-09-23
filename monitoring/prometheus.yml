@@ -21,6 +21,13 @@ scrape_configs:
       - targets:
           - "host.docker.internal:9106"
 
-  - job_name: 'pushgateway'
+  # Local Pushgateway (for testing on your machine)
+  - job_name: "pushgateway_local"
     static_configs:
-      - targets: ['pushgateway:9091']
+      - targets: ["pushgateway:9091"]
+
+  # Ngrok Pushgateway (for GitHub Actions jobs)
+  - job_name: "pushgateway_ci"
+    honor_labels: true
+    static_configs:
+      - targets: ["homelike-lobularly-nilsa.ngrok-free.dev"]   # replace with your ngrok URL
