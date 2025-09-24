@@ -51,9 +51,8 @@ jobs:
           ngrok http 9091 > ngrok.log &
           sleep 5
           echo "=== Ngrok tunnel started ==="
-          cat ngrok.log
-          # Extract first https URL from logs
-          NGROK_URL=$(grep -o 'https://[0-9a-zA-Z.-]*\.ngrok-free.app' ngrok.log | head -n 1)
+          curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url'
+          NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
           echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
 
 
