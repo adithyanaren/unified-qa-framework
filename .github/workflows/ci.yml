@@ -164,6 +164,15 @@ jobs:
           done
           echo "✅ Sent 5 test requests"
 
+      # NEW: Force Cold Start
+      - name: Force Cold Start by updating dummy env var
+        run: |
+          aws lambda update-function-configuration \
+            --function-name QAFrameworkCRUD \
+            --environment "Variables={DUMMY=$(date +%s)}" \
+            --region us-east-1
+          aws lambda wait function-updated --function-name QAFrameworkCRUD
+
       - name: Run QAFramework Harness
         run: |
           echo "=== Running Harness Events ==="
@@ -189,6 +198,10 @@ jobs:
           invoke_and_save read   '{"httpMethod":"GET","path":"/dev/items","queryStringParameters":{"id":"ci123"}}'
           invoke_and_save update '{"httpMethod":"PUT","path":"/dev/items","body":"{\"id\":\"ci123\",\"name\":\"Updated CI Item\"}"}'
           invoke_and_save delete '{"httpMethod":"DELETE","path":"/dev/items","queryStringParameters":{"id":"ci123"}}'
+
+      # NEW: Give CloudWatch 2 minutes
+      - name: Wait for CloudWatch metrics
+        run: sleep 120
 
       - name: Fetch CloudWatch metrics (RequestsProcessed + ColdStartCount)
         run: |
