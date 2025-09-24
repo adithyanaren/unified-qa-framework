@@ -90,23 +90,22 @@ jobs:
           AVG_LATENCY=$(awk -F',' 'NR>1 {sum+=$5; count++} END {if(count>0) print sum/count; else print 0}' $LOCUST_CSV)
 
           cat > write_prom.py <<'EOF'
-        import os
-        requests = os.getenv("REQUESTS", "0")
-        failures = os.getenv("FAILURES", "0")
-        latency = os.getenv("AVG_LATENCY", "0")
-        
-        metrics = f"""locust_requests_total {requests}
-        locust_failures_total {failures}
-        locust_avg_latency_ms {latency}
-        """
-        with open("locust.prom", "w", encoding="utf-8", newline="\n") as f:
-            f.write(metrics)
-        EOF
-        
-                  python write_prom.py
-                  curl --data-binary "@locust.prom" $NGROK_URL/metrics/job/locust/instance/github-actions
-                  echo "✅ Locust metrics pushed to Pushgateway"
+          import os
+          requests = os.getenv("REQUESTS", "0")
+          failures = os.getenv("FAILURES", "0")
+          latency = os.getenv("AVG_LATENCY", "0")
+          
+          metrics = f"""locust_requests_total {requests}
+          locust_failures_total {failures}
+          locust_avg_latency_ms {latency}
+          """
+          with open("locust.prom", "w", encoding="utf-8", newline="\n") as f:
+              f.write(metrics)
+          EOF
 
+          python write_prom.py
+          curl --data-binary "@locust.prom" $NGROK_URL/metrics/job/locust/instance/github-actions
+          echo "✅ Locust metrics pushed to Pushgateway"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
