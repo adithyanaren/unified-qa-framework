@@ -18,7 +18,6 @@ jobs:
         ports:
           - 9091:9091
 
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -56,7 +55,8 @@ jobs:
           echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
           echo "Tunnel URL is $NGROK_URL"
 
-
+      - name: Debug ngrok URL
+        run: echo "NGROK_URL is $NGROK_URL"
 
       - name: Run PyTest
         run: |
@@ -85,21 +85,25 @@ jobs:
           echo "=== Pushing Locust metrics to Pushgateway ==="
           LOCUST_CSV="reports/locust/results_stats.csv"
 
-          # Extract values from Locust CSV
           REQUESTS=$(awk -F',' 'NR>1 {sum+=$2} END {print sum}' $LOCUST_CSV)
           FAILURES=$(awk -F',' 'NR>1 {sum+=$3} END {print sum}' $LOCUST_CSV)
           AVG_LATENCY=$(awk -F',' 'NR>1 {sum+=$5; count++} END {if(count>0) print sum/count; else print 0}' $LOCUST_CSV)
 
-          # Write to .prom files
-          echo "locust_requests_total $REQUESTS"   >  locust.prom
-          echo "locust_failures_total $FAILURES" >> locust.prom
-          echo "locust_avg_latency_ms $AVG_LATENCY" >> locust.prom
+          cat <<EOF > write_prom.py
+import sys
+metrics = f"""locust_requests_total {REQUESTS}
+locust_failures_total {FAILURES}
+locust_avg_latency_ms {AVG_LATENCY}
+"""
+with open("locust.prom", "w", encoding="utf-8", newline="\\n") as f:
+    f.write(metrics)
+EOF
 
-          # Push to Pushgateway via ngrok
+          python write_prom.py
+
           curl --data-binary "@locust.prom" $NGROK_URL/metrics/job/locust/instance/github-actions
 
           echo "✅ Locust metrics pushed to Pushgateway"
-
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -175,7 +179,6 @@ jobs:
               --payload "$payload" \
               "$outfile" > /dev/null
             cat "$outfile"
-            # also keep a latest copy for dashboard
             cp "$outfile" "reports/harness/${name}.json"
           }
 
