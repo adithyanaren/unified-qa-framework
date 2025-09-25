@@ -164,7 +164,7 @@ jobs:
           done
           echo "✅ Sent 5 test requests"
 
-      # NEW: Force Cold Starts
+      # NEW: Force Cold Start
       - name: Force Cold Start by updating dummy env var
         run: |
           aws lambda update-function-configuration \

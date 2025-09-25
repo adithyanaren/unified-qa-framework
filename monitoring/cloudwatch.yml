@@ -27,3 +27,23 @@ metrics:
     aws_dimension_select:
       FunctionName: [QAFrameworkCRUD]
     aws_statistics: [Average]
+
+  - aws_namespace: QAFramework/Serverless
+    aws_metric_name: RequestsProcessed
+    aws_dimensions: [FunctionName, Stage]
+    aws_dimension_select:
+      FunctionName: [QAFrameworkCRUD]
+      Stage: [dev]
+    aws_statistics: [Sum]
+    period: 60
+    range_seconds: 600
+
+  - aws_namespace: QAFramework/Serverless
+    aws_metric_name: ColdStartCount
+    aws_dimensions: [FunctionName, Stage]
+    aws_dimension_select:
+      FunctionName: [QAFrameworkCRUD]
+      Stage: [dev]
+    aws_statistics: [Sum]
+    period: 60
+    range_seconds: 600
