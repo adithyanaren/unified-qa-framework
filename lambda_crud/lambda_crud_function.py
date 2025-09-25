@@ -55,10 +55,10 @@ def publish_metrics(function_name, is_cold_start):
             )
 
         cloudwatch.put_metric_data(Namespace=NAMESPACE, MetricData=metric_data)
-        logger.info(f"Published metrics: {metric_data}")
+        logger.info(f"✅ Published metrics: {metric_data}")
 
     except Exception as e:
-        logger.error(f"Failed to publish metrics: {e}")
+        logger.error(f"❌ Failed to publish metrics: {e}")
 
 
 def lambda_handler(event, context):
