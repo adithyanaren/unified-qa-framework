@@ -93,7 +93,7 @@ jobs:
           echo "locust_failures_total $FAILURES" >> locust.prom
           echo "locust_avg_latency_ms $AVG_LATENCY" >> locust.prom
 
-          curl --data-binary "@locust.prom" $NGROK_URL/metrics/job/locust/instance/github-actions
+          curl --data-binary "@locust.prom" $NGROK_URL/metrics/job=locust/instance=github-actions
           echo "✅ Locust metrics pushed to Pushgateway"
 
       - name: Configure AWS credentials
@@ -181,7 +181,7 @@ jobs:
           invoke_and_save delete '{"httpMethod":"DELETE","path":"/dev/items","queryStringParameters":{"id":"ci123"}}'
 
       - name: Wait for CloudWatch metrics
-        run: sleep 300   # Increased to 5 min to ensure CloudWatch publishes
+        run: sleep 120
 
       - name: Fetch and Push CloudWatch metrics
         run: |
@@ -193,7 +193,7 @@ jobs:
             --namespace "QAFramework/Serverless" \
             --metric-name RequestsProcessed \
             --dimensions Name=FunctionName,Value=QAFrameworkCRUD \
-            --start-time $(date -u -d '15 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
             --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
             --period 60 \
             --statistics Sum > $REQ_FILE
@@ -202,13 +202,13 @@ jobs:
             --namespace "QAFramework/Serverless" \
             --metric-name ColdStartCount \
             --dimensions Name=FunctionName,Value=QAFrameworkCRUD \
-            --start-time $(date -u -d '15 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
             --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
             --period 60 \
             --statistics Sum > $COLD_FILE
 
-          REQ=$(jq -r '.Datapoints | sort_by(.Timestamp) | last | .Sum // 0' $REQ_FILE || echo 0)
-          COLD=$(jq -r '.Datapoints | sort_by(.Timestamp) | last | .Sum // 0' $COLD_FILE || echo 0)
+          REQ=$(jq -r '.Datapoints[0].Sum // 0' $REQ_FILE || echo 0)
+          COLD=$(jq -r '.Datapoints[0].Sum // 0' $COLD_FILE || echo 0)
 
           echo "RequestsProcessed: $REQ"
           echo "ColdStartCount: $COLD"
@@ -216,7 +216,7 @@ jobs:
           echo "lambda_requests_processed $REQ" > lambda.prom
           echo "lambda_cold_start_count $COLD" >> lambda.prom
 
-          curl --data-binary "@lambda.prom" $NGROK_URL/metrics/job/lambda/instance/github-actions
+          curl --data-binary "@lambda.prom" $NGROK_URL/metrics/job=lambda/instance/github-actions
           echo "✅ Lambda metrics pushed to Pushgateway"
 
       - name: Promote to live alias
