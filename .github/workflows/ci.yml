@@ -216,10 +216,8 @@ jobs:
           echo "lambda_requests_processed $REQ" > lambda.prom
           echo "lambda_cold_start_count $COLD" >> lambda.prom
 
-          # ✅ FIXED URL format
-          curl --data-binary "@lambda.prom" $NGROK_URL/metrics/job/lambda/instance/github-actions
+          curl --data-binary "@lambda.prom" $NGROK_URL/metrics/job=lambda/instance/github-actions
           echo "✅ Lambda metrics pushed to Pushgateway"
-
 
       - name: Promote to live alias
         if: success()
@@ -249,4 +247,3 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: reports
-
