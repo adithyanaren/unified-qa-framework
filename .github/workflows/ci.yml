@@ -229,6 +229,13 @@ jobs:
 
           curl --data-binary "@lambda.prom" $NGROK_URL/metrics/job=lambda/instance/github-actions
           echo "✅ Lambda metrics pushed to Pushgateway"
+          
+      - name: Run Adaptive QA Controller
+        env:
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+          PUSHGATEWAY_URL: ${{ env.NGROK_URL }}
+        run: python adaptive_controller.py
+
 
       - name: Promote to live alias
         if: success()
