@@ -84,15 +84,16 @@ jobs:
         run: |
           echo "=== Pushing Locust metrics to Pushgateway ==="
           LOCUST_CSV="reports/locust/results_stats.csv"
+
           REQUESTS=$(awk -F',' 'NR>1 {sum+=$2} END {print sum}' $LOCUST_CSV)
           FAILURES=$(awk -F',' 'NR>1 {sum+=$3} END {print sum}' $LOCUST_CSV)
           AVG_LATENCY=$(awk -F',' 'NR>1 {sum+=$5; count++} END {if(count>0) print sum/count; else print 0}' $LOCUST_CSV)
-          cat > locust.prom <<EOF
-locust_requests_total $REQUESTS
-locust_failures_total $FAILURES
-locust_avg_latency_ms $AVG_LATENCY
-EOF
-          curl --data-binary "@locust.prom" $NGROK_URL/metrics/job/locust/instance/github-actions
+
+          echo "locust_requests_total $REQUESTS" > locust.prom
+          echo "locust_failures_total $FAILURES" >> locust.prom
+          echo "locust_avg_latency_ms $AVG_LATENCY" >> locust.prom
+
+          curl --data-binary "@locust.prom" $NGROK_URL/metrics/job=locust/instance=github-actions
           echo "✅ Locust metrics pushed to Pushgateway"
 
       - name: Configure AWS credentials
@@ -187,6 +188,7 @@ EOF
           mkdir -p reports/cloudwatch
           REQ_FILE="reports/cloudwatch/requests.json"
           COLD_FILE="reports/cloudwatch/coldstart.json"
+
           aws cloudwatch get-metric-statistics \
             --namespace "QAFramework/Serverless" \
             --metric-name RequestsProcessed \
@@ -195,6 +197,7 @@ EOF
             --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
             --period 60 \
             --statistics Sum > $REQ_FILE
+
           aws cloudwatch get-metric-statistics \
             --namespace "QAFramework/Serverless" \
             --metric-name ColdStartCount \
@@ -203,15 +206,17 @@ EOF
             --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
             --period 60 \
             --statistics Sum > $COLD_FILE
+
           REQ=$(jq -r '.Datapoints[0].Sum // 0' $REQ_FILE || echo 0)
           COLD=$(jq -r '.Datapoints[0].Sum // 0' $COLD_FILE || echo 0)
+
           echo "RequestsProcessed: $REQ"
           echo "ColdStartCount: $COLD"
-          cat > lambda.prom <<EOF
-lambda_requests_processed $REQ
-lambda_cold_start_count $COLD
-EOF
-          curl --data-binary "@lambda.prom" $NGROK_URL/metrics/job=lambda/instance=github-actions
+
+          echo "lambda_requests_processed $REQ" > lambda.prom
+          echo "lambda_cold_start_count $COLD" >> lambda.prom
+
+          curl --data-binary "@lambda.prom" $NGROK_URL/metrics/job=lambda/instance/github-actions
           echo "✅ Lambda metrics pushed to Pushgateway"
 
       - name: Promote to live alias
