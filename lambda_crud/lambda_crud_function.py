@@ -2,6 +2,7 @@ import json
 import logging
 import boto3
 import os
+import time  # added for explicit timestamps
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -36,6 +37,7 @@ def publish_metrics(function_name, is_cold_start):
                     {"Name": "FunctionName", "Value": function_name},
                     {"Name": "Stage", "Value": STAGE},
                 ],
+                "Timestamp": time.time(),  # ensure timestamp included
                 "Value": 1,
                 "Unit": "Count",
             }
@@ -49,13 +51,18 @@ def publish_metrics(function_name, is_cold_start):
                         {"Name": "FunctionName", "Value": function_name},
                         {"Name": "Stage", "Value": STAGE},
                     ],
+                    "Timestamp": time.time(),
                     "Value": 1,
                     "Unit": "Count",
                 }
             )
 
-        cloudwatch.put_metric_data(Namespace=NAMESPACE, MetricData=metric_data)
+        response = cloudwatch.put_metric_data(
+            Namespace=NAMESPACE, MetricData=metric_data
+        )
+        # Log both the request and AWS' response
         logger.info(f"✅ Published metrics: {metric_data}")
+        logger.info(f"📊 CloudWatch put_metric_data response: {response}")
 
     except Exception as e:
         logger.error(f"❌ Failed to publish metrics: {e}")

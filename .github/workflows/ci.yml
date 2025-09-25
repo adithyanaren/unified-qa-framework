@@ -181,7 +181,7 @@ jobs:
           invoke_and_save delete '{"httpMethod":"DELETE","path":"/dev/items","queryStringParameters":{"id":"ci123"}}'
 
       - name: Wait for CloudWatch metrics
-        run: sleep 120
+        run: sleep 180   # allow metrics time to propagate
 
       - name: Fetch and Push CloudWatch metrics
         run: |
@@ -189,30 +189,41 @@ jobs:
           REQ_FILE="reports/cloudwatch/requests.json"
           COLD_FILE="reports/cloudwatch/coldstart.json"
 
+          echo "=== Fetching CloudWatch metrics ==="
+
+          # RequestsProcessed
           aws cloudwatch get-metric-statistics \
             --namespace "QAFramework/Serverless" \
             --metric-name RequestsProcessed \
-            --dimensions Name=FunctionName,Value=QAFrameworkCRUD \
-            --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --dimensions Name=FunctionName,Value=QAFrameworkCRUD Name=Stage,Value=dev \
+            --start-time $(date -u -d '15 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
             --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
             --period 60 \
             --statistics Sum > $REQ_FILE
 
+          # ColdStartCount
           aws cloudwatch get-metric-statistics \
             --namespace "QAFramework/Serverless" \
             --metric-name ColdStartCount \
-            --dimensions Name=FunctionName,Value=QAFrameworkCRUD \
-            --start-time $(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --dimensions Name=FunctionName,Value=QAFrameworkCRUD Name=Stage,Value=dev \
+            --start-time $(date -u -d '15 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
             --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
             --period 60 \
             --statistics Sum > $COLD_FILE
 
-          REQ=$(jq -r '.Datapoints[0].Sum // 0' $REQ_FILE || echo 0)
-          COLD=$(jq -r '.Datapoints[0].Sum // 0' $COLD_FILE || echo 0)
+          echo "--- Raw RequestsProcessed response ---"
+          cat $REQ_FILE
+          echo "--- Raw ColdStartCount response ---"
+          cat $COLD_FILE
 
-          echo "RequestsProcessed: $REQ"
-          echo "ColdStartCount: $COLD"
+          # Aggregate all datapoints
+          REQ=$(jq '[.Datapoints[].Sum] | add // 0' $REQ_FILE)
+          COLD=$(jq '[.Datapoints[].Sum] | add // 0' $COLD_FILE)
 
+          echo "RequestsProcessed (aggregated): $REQ"
+          echo "ColdStartCount (aggregated): $COLD"
+
+          # Export to Prometheus
           echo "lambda_requests_processed $REQ" > lambda.prom
           echo "lambda_cold_start_count $COLD" >> lambda.prom
 
