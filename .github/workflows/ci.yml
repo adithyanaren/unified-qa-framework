@@ -231,7 +231,7 @@ jobs:
           echo "lambda_requests_processed $REQ" > lambda.prom
           echo "lambda_cold_start_count $COLD" >> lambda.prom
 
-# Push to ngrok (existing)
+          # Push to ngrok (existing)
           curl --data-binary "@lambda.prom" $NGROK_URL/metrics/job/lambda/instance/github-actions || true
           # Also push directly to EC2 Pushgateway
           curl --data-binary "@lambda.prom" http://3.88.41.188:9091/metrics/job/lambda/instance/github-actions || true
