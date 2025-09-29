@@ -93,7 +93,7 @@ jobs:
           echo "locust_failures_total $FAILURES" >> locust.prom
           echo "locust_avg_latency_ms $AVG_LATENCY" >> locust.prom
 
-          curl --data-binary "@locust.prom" $NGROK_URL/metrics/job=locust/instance=github-actions
+          curl --data-binary "@locust.prom" $NGROK_URL/metrics/job/locust/instance=github-actions
           echo "✅ Locust metrics pushed to Pushgateway"
 
       - name: Configure AWS credentials
@@ -227,7 +227,7 @@ jobs:
           echo "lambda_requests_processed $REQ" > lambda.prom
           echo "lambda_cold_start_count $COLD" >> lambda.prom
 
-          curl --data-binary "@lambda.prom" $NGROK_URL/metrics/job=lambda/instance/github-actions
+          curl --data-binary "@lambda.prom" $NGROK_URL/metrics/job/lambda/instance/github-actions
           echo "✅ Lambda metrics pushed to Pushgateway"
           
       - name: Run Adaptive QA Controller

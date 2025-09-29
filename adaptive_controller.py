@@ -37,7 +37,7 @@ def trigger_tests(test_type):
     if test_type == "locust":
         subprocess.run(["pytest", "tests/load/locust_runner.py"], check=False)
     elif test_type == "robot":
-        subprocess.run(["robot", "tests/robot_scenarios"], check=False)
+        subprocess.run(["robot", "src/tests/Robot/api_tests.robot"], check=False)
     elif test_type == "pytest":
         subprocess.run(["pytest", "tests/functional"], check=False)
 
