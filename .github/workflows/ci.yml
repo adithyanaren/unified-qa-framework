@@ -109,6 +109,14 @@ jobs:
           # Also show summary in logs
           pip-audit || true
 
+      - name: OWASP ZAP baseline scan
+        run: |
+          mkdir -p reports/security
+          docker run --rm -v $(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/ \
+            -r reports/security/zap_report.html || true
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
