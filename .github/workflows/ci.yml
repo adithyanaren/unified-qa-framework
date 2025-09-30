@@ -112,10 +112,12 @@ jobs:
       - name: OWASP ZAP baseline scan
         run: |
           mkdir -p reports/security
-          docker run --rm -v $(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable \
+          docker run --rm -v $(pwd)/reports/security:/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/ \
-            -r reports/security/zap_report.html || true
+            -r zap_report.html || true
+          # Move the report into correct folder
+          mv reports/security/zap_report.html reports/security/zap_report.html || true
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
