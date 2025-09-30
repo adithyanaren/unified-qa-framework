@@ -100,6 +100,15 @@ jobs:
 
           echo "✅ Locust metrics pushed to Pushgateway"
 
+      - name: Dependency vulnerability scan
+        run: |
+          mkdir -p reports/security
+          pip install pip-audit
+          # Save JSON results
+          pip-audit -f json -o reports/security/scan.json || true
+          # Also show summary in logs
+          pip-audit || true
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -200,7 +209,7 @@ jobs:
             --namespace "QAFramework/Serverless" \
             --metric-name RequestsProcessed \
             --dimensions Name=FunctionName,Value=QAFrameworkCRUD Name=Stage,Value=dev \
-            --start-time $(date -u -d '15 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
             --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
             --period 60 \
             --statistics Sum > $REQ_FILE
