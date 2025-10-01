@@ -1,4 +1,15 @@
 {
     "Label": "RequestsProcessed",
-    "Datapoints": []
+    "Datapoints": [
+        {
+            "Timestamp": "2025-10-01T14:44:00+00:00",
+            "Sum": 454.0,
+            "Unit": "Count"
+        },
+        {
+            "Timestamp": "2025-10-01T14:45:00+00:00",
+            "Sum": 200.0,
+            "Unit": "Count"
+        }
+    ]
 }
