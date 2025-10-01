@@ -204,7 +204,7 @@ jobs:
           invoke_and_save delete '{"httpMethod":"DELETE","path":"/dev/items","queryStringParameters":{"id":"ci123"}}'
 
       - name: Wait for CloudWatch metrics
-        run: sleep 180   # allow metrics time to propagat
+        run: sleep 180   # allow metrics time to propagate
 
       - name: Fetch and Push CloudWatch metrics
         run: |
