@@ -1,35 +1,25 @@
-import boto3
 import requests
 import subprocess
 import datetime
 import os
 
 # Config
-REGION = "us-east-1"
-NAMESPACE = "QAFramework"
+PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
 PROMETHEUS_PUSHGATEWAY = os.getenv("PUSHGATEWAY_URL", "http://localhost:9091")
 COLDSTART_THRESHOLD = 2
 REQUEST_THRESHOLD = 1
 
-cloudwatch = boto3.client("cloudwatch", region_name=REGION)
 
-
-def fetch_cloudwatch_metric(metric_name, period=60):
-    now = datetime.datetime.utcnow()
-    start = now - datetime.timedelta(minutes=5)
-
-    response = cloudwatch.get_metric_statistics(
-        Namespace=NAMESPACE,
-        MetricName=metric_name,
-        StartTime=start,
-        EndTime=now,
-        Period=period,
-        Statistics=["Sum"]
-    )
-    datapoints = response.get("Datapoints", [])
-    if not datapoints:
-        return 0
-    return int(datapoints[-1]["Sum"])
+def fetch_prometheus_metric(query):
+    url = f"{PROMETHEUS_URL}/api/v1/query"
+    try:
+        response = requests.get(url, params={"query": query})
+        result = response.json()["data"]["result"]
+        if result:
+            return int(float(result[0]["value"][1]))
+    except Exception as e:
+        print(f"[Controller] Error fetching {query}: {e}")
+    return 0
 
 
 def trigger_tests(test_type):
@@ -48,8 +38,8 @@ def push_to_prometheus(metric, value):
 
 
 def main():
-    requests_processed = fetch_cloudwatch_metric("RequestsProcessed")
-    cold_starts = fetch_cloudwatch_metric("ColdStartCount")
+    requests_processed = fetch_prometheus_metric("lambda_requests_processed")
+    cold_starts = fetch_prometheus_metric("lambda_cold_start_count")
 
     print(f"[Controller] RequestsProcessed={requests_processed}, ColdStarts={cold_starts}")
 
