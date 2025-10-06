@@ -2,13 +2,18 @@
     "Label": "RequestsProcessed",
     "Datapoints": [
         {
-            "Timestamp": "2025-10-01T15:30:00+00:00",
-            "Sum": 470.0,
+            "Timestamp": "2025-10-06T13:15:00+00:00",
+            "Sum": 204.0,
             "Unit": "Count"
         },
         {
-            "Timestamp": "2025-10-01T15:31:00+00:00",
-            "Sum": 181.0,
+            "Timestamp": "2025-10-06T13:16:00+00:00",
+            "Sum": 407.0,
+            "Unit": "Count"
+        },
+        {
+            "Timestamp": "2025-10-06T13:17:00+00:00",
+            "Sum": 8.0,
             "Unit": "Count"
         }
     ]
