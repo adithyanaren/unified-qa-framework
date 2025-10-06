@@ -38,13 +38,26 @@ def trigger_tests(test_type):
     print(f"[Controller] Triggering {test_type} tests...")
     try:
         if test_type == "locust":
-            subprocess.run(["pytest", "tests/load/locust_runner.py"], check=False)
+            # Run Locust headless against the Lambda API Gateway endpoint
+            subprocess.run([
+                "locust",
+                "-f", "src/tests/locust/locustfile.py",
+                "--headless",
+                "-u", "10",              # number of users
+                "-r", "2",               # spawn rate
+                "-t", "1m",              # duration
+                "--host", "https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev"
+            ], check=False)
+
         elif test_type == "robot":
             subprocess.run(["robot", "src/tests/Robot/api_tests.robot"], check=False)
+
         elif test_type == "pytest":
-            subprocess.run(["pytest", "tests/functional"], check=False)
+            subprocess.run(["pytest", "src/tests/pytest"], check=False)
+
     except Exception as e:
         print(f"[Controller] Error running {test_type} tests: {e}")
+
 
 
 def push_to_prometheus(metric, value):
