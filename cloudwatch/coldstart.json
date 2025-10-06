@@ -2,23 +2,13 @@
     "Label": "ColdStartCount",
     "Datapoints": [
         {
-            "Timestamp": "2025-10-06T13:41:00+00:00",
-            "Sum": 1.0,
+            "Timestamp": "2025-10-06T20:47:00+00:00",
+            "Sum": 4.0,
             "Unit": "Count"
         },
         {
-            "Timestamp": "2025-10-06T13:33:00+00:00",
-            "Sum": 1.0,
-            "Unit": "Count"
-        },
-        {
-            "Timestamp": "2025-10-06T13:42:00+00:00",
+            "Timestamp": "2025-10-06T20:48:00+00:00",
             "Sum": 2.0,
-            "Unit": "Count"
-        },
-        {
-            "Timestamp": "2025-10-06T13:40:00+00:00",
-            "Sum": 3.0,
             "Unit": "Count"
         }
     ]
