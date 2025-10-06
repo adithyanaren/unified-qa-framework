@@ -260,7 +260,9 @@ jobs:
         env:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
           PUSHGATEWAY_URL: ${{ env.NGROK_URL }}
+          PROMETHEUS_URL: "http://54.224.224.239:9090"   # 👈 Add this line (EC2 public IP)
         run: python adaptive_controller.py
+
 
 
       - name: Promote to live alias
