@@ -5,8 +5,9 @@ import os
 import time
 
 # === Config ===
-PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
-PROMETHEUS_PUSHGATEWAY = os.getenv("PUSHGATEWAY_URL", "http://localhost:9091")
+PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://54.224.224.239:9090")  # EC2 public Prometheus
+PROMETHEUS_PUSHGATEWAY = os.getenv("PUSHGATEWAY_URL", "http://54.224.224.239:9091")  # EC2 Pushgateway
+
 COLDSTART_THRESHOLD = 2
 REQUEST_THRESHOLD = 1
 RETRY_DELAY = 5  # seconds
