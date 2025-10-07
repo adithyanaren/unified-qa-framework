@@ -9,7 +9,7 @@ on:
 permissions:
   contents: write
 env:
-  QA_MODE: "baseline"   # change to "baseline" for experiment
+  QA_MODE: "adaptive"   # change to "baseline" for experiment
 
 jobs:
   test-deploy:
