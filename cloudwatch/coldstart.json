@@ -2,27 +2,12 @@
     "Label": "ColdStartCount",
     "Datapoints": [
         {
-            "Timestamp": "2025-10-07T12:36:00+00:00",
-            "Sum": 4.0,
+            "Timestamp": "2025-10-07T13:02:00+00:00",
+            "Sum": 5.0,
             "Unit": "Count"
         },
         {
-            "Timestamp": "2025-10-07T12:41:00+00:00",
-            "Sum": 1.0,
-            "Unit": "Count"
-        },
-        {
-            "Timestamp": "2025-10-07T12:37:00+00:00",
-            "Sum": 2.0,
-            "Unit": "Count"
-        },
-        {
-            "Timestamp": "2025-10-07T12:43:00+00:00",
-            "Sum": 3.0,
-            "Unit": "Count"
-        },
-        {
-            "Timestamp": "2025-10-07T12:44:00+00:00",
+            "Timestamp": "2025-10-07T13:03:00+00:00",
             "Sum": 2.0,
             "Unit": "Count"
         }
