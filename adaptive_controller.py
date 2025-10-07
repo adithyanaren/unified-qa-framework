@@ -84,6 +84,13 @@ def check_prometheus_connection():
 
 
 def main():
+    # === NEW: Mode switch for baseline vs adaptive experiments ===
+    mode = os.getenv("QA_MODE", "adaptive").lower()
+    print(f"[Controller] QA_MODE = {mode}")
+
+    if mode == "baseline":
+        print("[Controller] Baseline mode active — skipping adaptive triggers.")
+        return
     if not check_prometheus_connection():
         print(f"[Controller] Retrying Prometheus connection in {RETRY_DELAY}s...")
         time.sleep(RETRY_DELAY)
