@@ -102,6 +102,18 @@ jobs:
           
           echo "✅ Locust metrics pushed to Pushgateway"
 
+      - name: Run ML Lambda Inference Test
+        run: |
+          echo "=== Running ML Lambda Inference Tests ==="
+          mkdir -p reports/ml
+          python src/tests/ml/test_ml_inference_lambda.py
+        env:
+          ML_LAMBDA_NAME: QAFrameworkMLInferenceContainer
+          PUSHGATEWAY_URL: http://54.224.224.239:9091
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+
 #      - name: Dependency vulnerability scan
 #        run: |
 #          mkdir -p reports/security
