@@ -2,53 +2,23 @@
     "Label": "RequestsProcessed",
     "Datapoints": [
         {
-            "Timestamp": "2025-10-07T13:02:00+00:00",
-            "Sum": 522.0,
+            "Timestamp": "2025-10-09T13:28:00+00:00",
+            "Sum": 548.0,
             "Unit": "Count"
         },
         {
-            "Timestamp": "2025-10-07T13:07:00+00:00",
-            "Sum": 421.0,
+            "Timestamp": "2025-10-09T13:20:00+00:00",
+            "Sum": 389.0,
             "Unit": "Count"
         },
         {
-            "Timestamp": "2025-10-07T13:03:00+00:00",
-            "Sum": 141.0,
+            "Timestamp": "2025-10-09T13:29:00+00:00",
+            "Sum": 172.0,
             "Unit": "Count"
         },
         {
-            "Timestamp": "2025-10-07T13:17:00+00:00",
-            "Sum": 30.0,
-            "Unit": "Count"
-        },
-        {
-            "Timestamp": "2025-10-07T13:13:00+00:00",
-            "Sum": 397.0,
-            "Unit": "Count"
-        },
-        {
-            "Timestamp": "2025-10-07T13:22:00+00:00",
-            "Sum": 348.0,
-            "Unit": "Count"
-        },
-        {
-            "Timestamp": "2025-10-07T13:18:00+00:00",
-            "Sum": 478.0,
-            "Unit": "Count"
-        },
-        {
-            "Timestamp": "2025-10-07T13:14:00+00:00",
-            "Sum": 220.0,
-            "Unit": "Count"
-        },
-        {
-            "Timestamp": "2025-10-07T13:23:00+00:00",
-            "Sum": 300.0,
-            "Unit": "Count"
-        },
-        {
-            "Timestamp": "2025-10-07T13:06:00+00:00",
-            "Sum": 97.0,
+            "Timestamp": "2025-10-09T13:21:00+00:00",
+            "Sum": 281.0,
             "Unit": "Count"
         }
     ]
