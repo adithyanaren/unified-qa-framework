@@ -1,4 +1,4 @@
-name: CI - QA Framework
+name: CI - Unified QA Framework (ML Inference Lambda)
 
 on:
   push:
@@ -8,11 +8,16 @@ on:
 
 permissions:
   contents: write
+
 env:
-  QA_MODE: "adaptive"   # change to "baseline" for experiment
+  QA_MODE: "adaptive"
+  AWS_REGION: "us-east-1"
+  PUSHGATEWAY_URL: "http://54.224.224.239:9091"
+  PROMETHEUS_URL: "http://54.224.224.239:9090"
+  ML_LAMBDA_NAME: "QAFrameworkMLInferenceContainer"
 
 jobs:
-  test-deploy:
+  qa-pipeline:
     runs-on: ubuntu-latest
     services:
       pushgateway:
@@ -21,289 +26,192 @@ jobs:
           - 9091:9091
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    # --- Checkout and Setup ---
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
 
-      - name: Verify Python version
-        run: python --version
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-      - name: Cache pip
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+    # --- Create ngrok tunnel for Pushgateway (fallback) ---
+    - name: Start ngrok tunnel (optional)
+      run: |
+        npm install -g ngrok
+        ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+        ngrok http 9091 --log=stdout > ngrok.log &
+        sleep 5
+        NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+        echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
+        echo "🌐 Pushgateway Tunnel: $NGROK_URL"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+    # --- Run PyTest (functional) ---
+    - name: Run PyTest
+      run: |
+        mkdir -p reports/pytest
+        pytest src/tests/pytest --maxfail=1 --disable-warnings -q --junitxml=reports/pytest/results.xml
 
-      - name: Start ngrok tunnel for Pushgateway
-        run: |
-          npm install -g ngrok
-          ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
-          ngrok http 9091 --log=stdout > ngrok.log &
-          sleep 5
-          echo "=== Ngrok tunnel started ==="
-          curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url' > ngrok_url.txt
-          NGROK_URL=$(cat ngrok_url.txt)
-          echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
-          echo "Tunnel URL is $NGROK_URL"
+    # --- Run Robot Framework (behavioral) ---
+    - name: Run Robot Framework tests
+      run: |
+        mkdir -p reports/robot
+        robot --output reports/robot/output.xml \
+              --report reports/robot/report.html \
+              --log reports/robot/log.html \
+              src/tests/Robot/api_tests.robot
 
-      - name: Debug ngrok URL
-        run: echo "NGROK_URL is $NGROK_URL"
+    # --- Run Locust (performance) ---
+    - name: Run Locust load tests
+      run: |
+        mkdir -p reports/locust
+        locust -f src/tests/locust/locustfile.py \
+          --headless \
+          -u 10 -r 2 -t 1m \
+          --host https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev \
+          --csv reports/locust/results
 
-      - name: Run PyTest
-        run: |
-          mkdir -p reports/pytest
-          PYTHONPATH=. pytest src/tests/pytest --maxfail=1 --disable-warnings -q --junitxml=reports/pytest/results.xml
+    - name: Push Locust metrics to Pushgateway
+      run: |
+        LOCUST_CSV="reports/locust/results_stats.csv"
+        REQUESTS=$(awk -F',' 'NR>1 {sum+=$2} END {print sum}' $LOCUST_CSV)
+        FAILURES=$(awk -F',' 'NR>1 {sum+=$3} END {print sum}' $LOCUST_CSV)
+        AVG_LATENCY=$(awk -F',' 'NR>1 {sum+=$5; count++} END {if(count>0) print sum/count; else print 0}' $LOCUST_CSV)
+        echo "locust_requests_total $REQUESTS" > locust.prom
+        echo "locust_failures_total $FAILURES" >> locust.prom
+        echo "locust_avg_latency_ms $AVG_LATENCY" >> locust.prom
+        curl --data-binary "@locust.prom" ${{ env.PUSHGATEWAY_URL }}/metrics/job/locust/instance/github-actions || true
+        echo "✅ Locust metrics pushed to Prometheus"
 
-      - name: Run Robot Framework tests
-        run: |
-          mkdir -p reports/robot
-          robot --output reports/robot/output.xml \
-                --report reports/robot/report.html \
-                --log reports/robot/log.html \
-                src/tests/Robot/api_tests.robot
+    # --- Run ML Lambda Inference Test ---
+    - name: Run ML Lambda Inference Test
+      run: |
+        mkdir -p reports/ml
+        python src/tests/ml/test_ml_inference_lambda.py
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Run Locust load tests
-        run: |
-          mkdir -p reports/locust
-          NEGATIVE_TESTS=false locust -f src/tests/locust/locustfile.py \
-              --headless \
-              -u 10 -r 2 -t 1m \
-              --host https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev \
-              --csv reports/locust/results
+    # --- Run ML Experiments ---
+    - name: Run ML Experiment Suite
+      run: |
+        echo "=== Executing ML Experiment Suite ==="
+        mkdir -p reports/ml_experiments
+        python src/experiments/ml_latency_experiment.py
+        python src/experiments/ml_coldstart_experiment.py
+        python src/experiments/ml_concurrency_experiment.py
+        python src/experiments/ml_adaptive_feedback_experiment.py
+        echo "✅ All ML experiments executed"
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Push Locust results to Pushgateway
-        run: |
-          echo "=== Pushing Locust metrics to Pushgateway ==="
-          LOCUST_CSV="reports/locust/results_stats.csv"
+    # --- Configure AWS Credentials ---
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
 
-          REQUESTS=$(awk -F',' 'NR>1 {sum+=$2} END {print sum}' $LOCUST_CSV)
-          FAILURES=$(awk -F',' 'NR>1 {sum+=$3} END {print sum}' $LOCUST_CSV)
-          AVG_LATENCY=$(awk -F',' 'NR>1 {sum+=$5; count++} END {if(count>0) print sum/count; else print 0}' $LOCUST_CSV)
+    # --- Deploy Lambda to Dev Alias ---
+    - name: Deploy Lambda to dev alias
+      run: |
+        zip -r lambda_ml.zip lambda_ml_container/
+        aws lambda update-function-code \
+          --function-name $ML_LAMBDA_NAME \
+          --zip-file fileb://lambda_ml.zip
+        aws lambda wait function-updated --function-name $ML_LAMBDA_NAME
+        VERSION=$(aws lambda publish-version --function-name $ML_LAMBDA_NAME --query Version --output text)
+        aws lambda update-alias \
+          --function-name $ML_LAMBDA_NAME \
+          --name dev \
+          --function-version $VERSION || \
+        aws lambda create-alias \
+          --function-name $ML_LAMBDA_NAME \
+          --name dev \
+          --function-version $VERSION
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-          echo "locust_requests_total $REQUESTS" > locust.prom
-          echo "locust_failures_total $FAILURES" >> locust.prom
-          echo "locust_avg_latency_ms $AVG_LATENCY" >> locust.prom
+    # --- Health Check Lambda ---
+    - name: Health check Lambda alias
+      run: |
+        echo "Invoking $ML_LAMBDA_NAME:dev..."
+        aws lambda invoke \
+          --function-name $ML_LAMBDA_NAME:dev \
+          --cli-binary-format raw-in-base64-out \
+          --payload '{"ping":"test"}' response.json
+        cat response.json
 
-          # Push to ngrok (existing)
-          curl --data-binary "@locust.prom" $NGROK_URL/metrics/job/locust/instance/github-actions || true
-          # Also push directly to EC2 Pushgateway
-          curl --data-binary "@locust.prom" http://54.224.224.239:9091/metrics/job/locust/instance/github-actions || true
-          
-          echo "✅ Locust metrics pushed to Pushgateway"
+    # --- Force Cold Start ---
+    - name: Force Cold Start
+      run: |
+        aws lambda update-function-configuration \
+          --function-name $ML_LAMBDA_NAME \
+          --environment "Variables={DUMMY=$(date +%s)}"
+        aws lambda wait function-updated --function-name $ML_LAMBDA_NAME
 
-      - name: Run ML Lambda Inference Test
-        run: |
-          echo "=== Running ML Lambda Inference Tests ==="
-          mkdir -p reports/ml
-          python src/tests/ml/test_ml_inference_lambda.py
-        env:
-          ML_LAMBDA_NAME: QAFrameworkMLInferenceContainer
-          PUSHGATEWAY_URL: http://54.224.224.239:9091
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+    # --- Fetch CloudWatch Metrics and Push to Prometheus ---
+    - name: Fetch and Push CloudWatch Metrics
+      run: |
+        mkdir -p reports/cloudwatch
+        aws cloudwatch get-metric-statistics \
+          --namespace "QAFramework/Serverless" \
+          --metric-name RequestsProcessed \
+          --dimensions Name=FunctionName,Value=$ML_LAMBDA_NAME Name=Stage,Value=dev \
+          --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+          --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+          --period 60 --statistics Sum > reports/cloudwatch/req.json
+        aws cloudwatch get-metric-statistics \
+          --namespace "QAFramework/Serverless" \
+          --metric-name ColdStartCount \
+          --dimensions Name=FunctionName,Value=$ML_LAMBDA_NAME Name=Stage,Value=dev \
+          --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+          --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+          --period 60 --statistics Sum > reports/cloudwatch/cold.json
+        REQ=$(jq '[.Datapoints[].Sum] | add // 0' reports/cloudwatch/req.json)
+        COLD=$(jq '[.Datapoints[].Sum] | add // 0' reports/cloudwatch/cold.json)
+        echo "lambda_requests_processed $REQ" > lambda.prom
+        echo "lambda_cold_start_count $COLD" >> lambda.prom
+        curl --data-binary "@lambda.prom" ${{ env.PUSHGATEWAY_URL }}/metrics/job/lambda/instance/github-actions || true
+        echo "✅ CloudWatch metrics pushed to Prometheus"
 
-#      - name: Dependency vulnerability scan
-#        run: |
-#          mkdir -p reports/security
-#          pip install pip-audit
-#          # Save JSON results
-#          pip-audit -f json -o reports/security/scan.json || true
-#          # Also show summary in logs
-#          pip-audit || true
+    # --- Run Adaptive QA Controller ---
+    - name: Run Adaptive QA Controller
+      run: |
+        python src/adaptive_controller.py --lambda $ML_LAMBDA_NAME
+      env:
+        PROMETHEUS_URL: ${{ env.PROMETHEUS_URL }}
+        PUSHGATEWAY_URL: ${{ env.PUSHGATEWAY_URL }}
+        AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
 
-#      - name: OWASP ZAP baseline scan
-#        run: |
-#          mkdir -p reports/security
-#          docker run --rm -v $(pwd)/reports/security:/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable \
-#            zap-baseline.py \
-#            -t https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/ \
-#            -r zap_report.html || true
-#          # Move the report into correct folder
-#          mv reports/security/zap_report.html reports/security/zap_report.html || true
+    # --- Promote to Live Alias ---
+    - name: Promote to live alias
+      if: success()
+      run: |
+        echo "Promoting version $VERSION to live..."
+        aws lambda update-alias \
+          --function-name $ML_LAMBDA_NAME \
+          --name live \
+          --function-version $VERSION || \
+        aws lambda create-alias \
+          --function-name $ML_LAMBDA_NAME \
+          --name live \
+          --function-version $VERSION
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+    # --- Update Unified Dashboard ---
+    - name: Update Unified Grafana Dashboard
+      run: |
+        python generate_dashboard.py --refresh --stage dev --function $ML_LAMBDA_NAME
 
-      - name: Deploy Lambda to dev alias
-        run: |
-          zip -r lambda_crud.zip lambda_crud/lambda_crud_function.py
-          aws lambda update-function-code \
-            --function-name QAFrameworkCRUD \
-            --zip-file fileb://lambda_crud.zip
-          aws lambda wait function-updated --function-name QAFrameworkCRUD
-          VERSION=$(aws lambda publish-version --function-name QAFrameworkCRUD --query Version --output text)
-          aws lambda update-alias \
-            --function-name QAFrameworkCRUD \
-            --name dev \
-            --function-version $VERSION || \
-          aws lambda create-alias \
-            --function-name QAFrameworkCRUD \
-            --name dev \
-            --function-version $VERSION
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Health check Lambda alias (direct invoke)
-        run: |
-          echo "Invoking QAFrameworkCRUD:dev alias..."
-          aws lambda invoke \
-            --function-name QAFrameworkCRUD:dev \
-            --cli-binary-format raw-in-base64-out \
-            --payload '{"ping":"test"}' \
-            response.json
-          cat response.json
-          if grep -q "error" response.json; then
-            echo "❌ Lambda dev alias failed health check"
-            exit 1
-          else
-            echo "✅ Lambda dev alias passed health check"
-          fi
-
-      - name: Generate API Gateway traffic (for metrics)
-        run: |
-          echo "Sending traffic to API Gateway..."
-          for i in {1..5}; do
-            curl -s https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/ \
-              -H "Content-Type: application/json" \
-              -d '{"ping":"ci-metric-test"}'
-            echo
-          done
-          echo "✅ Sent 5 test requests"
-
-      - name: Force Cold Start by updating dummy env var
-        run: |
-          aws lambda update-function-configuration \
-            --function-name QAFrameworkCRUD \
-            --environment "Variables={DUMMY=$(date +%s)}" \
-            --region us-east-1
-          aws lambda wait function-updated --function-name QAFrameworkCRUD
-
-      - name: Run QAFramework Harness
-        run: |
-          echo "=== Running Harness Events ==="
-          mkdir -p reports/harness
-          run_ts=$(date -u +%Y%m%dT%H%M%SZ)
-          invoke_and_save() {
-            name=$1
-            payload=$2
-            outfile="reports/harness/${name}_${run_ts}.json"
-            echo "--- $name ---"
-            aws lambda invoke \
-              --function-name QAFrameworkCRUD:dev \
-              --cli-binary-format raw-in-base64-out \
-              --payload "$payload" \
-              "$outfile" > /dev/null
-            cat "$outfile"
-            cp "$outfile" "reports/harness/${name}.json"
-          }
-          invoke_and_save root   '{"httpMethod":"GET","path":"/dev/"}'
-          invoke_and_save create '{"httpMethod":"POST","path":"/dev/items","body":"{\"id\":\"ci123\",\"name\":\"CI Item\"}"}'
-          invoke_and_save read   '{"httpMethod":"GET","path":"/dev/items","queryStringParameters":{"id":"ci123"}}'
-          invoke_and_save update '{"httpMethod":"PUT","path":"/dev/items","body":"{\"id\":\"ci123\",\"name\":\"Updated CI Item\"}"}'
-          invoke_and_save delete '{"httpMethod":"DELETE","path":"/dev/items","queryStringParameters":{"id":"ci123"}}'
-
-      - name: Wait for CloudWatch metrics
-        run: sleep 180   # allow metrics time to propagat
-
-      - name: Fetch and Push CloudWatch metrics
-        run: |
-          mkdir -p reports/cloudwatch
-          REQ_FILE="reports/cloudwatch/requests.json"
-          COLD_FILE="reports/cloudwatch/coldstart.json"
-
-          echo "=== Fetching CloudWatch metrics ==="
-
-          # RequestsProcessed
-          aws cloudwatch get-metric-statistics \
-            --namespace "QAFramework/Serverless" \
-            --metric-name RequestsProcessed \
-            --dimensions Name=FunctionName,Value=QAFrameworkCRUD Name=Stage,Value=dev \
-            --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
-            --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-            --period 60 \
-            --statistics Sum > $REQ_FILE
-
-          # ColdStartCount
-          aws cloudwatch get-metric-statistics \
-            --namespace "QAFramework/Serverless" \
-            --metric-name ColdStartCount \
-            --dimensions Name=FunctionName,Value=QAFrameworkCRUD Name=Stage,Value=dev \
-            --start-time $(date -u -d '15 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
-            --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-            --period 60 \
-            --statistics Sum > $COLD_FILE
-
-          echo "--- Raw RequestsProcessed response ---"
-          cat $REQ_FILE
-          echo "--- Raw ColdStartCount response ---"
-          cat $COLD_FILE
-
-          # Aggregate all datapoints
-          REQ=$(jq '[.Datapoints[].Sum] | add // 0' $REQ_FILE)
-          COLD=$(jq '[.Datapoints[].Sum] | add // 0' $COLD_FILE)
-
-          echo "RequestsProcessed (aggregated): $REQ"
-          echo "ColdStartCount (aggregated): $COLD"
-
-          # Export to Prometheus
-          echo "lambda_requests_processed $REQ" > lambda.prom
-          echo "lambda_cold_start_count $COLD" >> lambda.prom
-
-          # Push to ngrok (existing)
-          curl --data-binary "@lambda.prom" $NGROK_URL/metrics/job/lambda/instance/github-actions || true
-          # Also push directly to EC2 Pushgateway
-          curl --data-binary "@lambda.prom" http://54.224.224.239:9091/metrics/job/lambda/instance/github-actions || true
-          echo "✅ Lambda metrics pushed to Pushgateway"
-          
-      - name: Run Adaptive QA Controller
-        env:
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-          PUSHGATEWAY_URL: ${{ env.NGROK_URL }}
-          PROMETHEUS_URL: "http://54.224.224.239:9090"   # 👈 Add this line (EC2 public IP)
-        run: python adaptive_controller.py
-
-
-
-      - name: Promote to live alias
-        if: success()
-        run: |
-          echo "Promoting version $VERSION to live alias..."
-          aws lambda update-alias \
-            --function-name QAFrameworkCRUD \
-            --name live \
-            --function-version $VERSION || \
-          aws lambda create-alias \
-            --function-name QAFrameworkCRUD \
-            --name live \
-            --function-version $VERSION
-
-      - name: Generate unified dashboard
-        run: |
-          python generate_dashboard.py --refresh --stage dev --function QAFrameworkCRUD
-
-      - name: Copy dashboard and reports
-        run: |
-          cp reports/robot/Dashboard.html reports/index.html
-          cp reports/robot/report.html reports/report.html
-          cp reports/robot/log.html reports/log.html
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: reports
+    # --- Publish Reports to GitHub Pages ---
+    - name: Deploy reports to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: reports

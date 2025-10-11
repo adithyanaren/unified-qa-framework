@@ -1,0 +1,69 @@
+{
+  "id": 3,
+  "type": "stat",
+  "title": "ML Lambda – Latest Metrics Summary",
+  "gridPos": {
+    "x": 0,
+    "y": 14,
+    "h": 4,
+    "w": 24
+  },
+  "fieldConfig": {
+    "defaults": {
+      "mappings": [],
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "red",
+            "value": 80
+          }
+        ]
+      }
+    },
+    "overrides": []
+  },
+  "pluginVersion": "12.2.0",
+  "targets": [
+    {
+      "expr": "ml_lambda_invocations_total",
+      "legendFormat": "Invocations",
+      "refId": "A"
+    },
+    {
+      "expr": "ml_lambda_duration_ms",
+      "legendFormat": "Duration (ms)",
+      "refId": "B"
+    },
+    {
+      "expr": "ml_lambda_errors_total",
+      "legendFormat": "Errors",
+      "refId": "C"
+    }
+  ],
+  "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+  },
+  "options": {
+    "reduceOptions": {
+      "values": false,
+      "calcs": [
+        "last"
+      ],
+      "fields": ""
+    },
+    "orientation": "horizontal",
+    "textMode": "value_and_name",
+    "wideLayout": true,
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto",
+    "showPercentChange": false,
+    "percentChangeColorMode": "standard"
+  }
+}
