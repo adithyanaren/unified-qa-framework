@@ -51,30 +51,36 @@ jobs:
         echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
         echo "🌐 Pushgateway Tunnel: $NGROK_URL"
 
-    # --- Run PyTest (functional) ---
     - name: Run PyTest
       run: |
         mkdir -p reports/pytest
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        echo "PYTHONPATH is $PYTHONPATH"
         pytest src/tests/pytest --maxfail=1 --disable-warnings -q --junitxml=reports/pytest/results.xml
 
-    # --- Run Robot Framework (behavioral) ---
+
     - name: Run Robot Framework tests
       run: |
         mkdir -p reports/robot
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        echo "PYTHONPATH is $PYTHONPATH"
         robot --output reports/robot/output.xml \
               --report reports/robot/report.html \
               --log reports/robot/log.html \
               src/tests/Robot/api_tests.robot
 
-    # --- Run Locust (performance) ---
+
     - name: Run Locust load tests
       run: |
         mkdir -p reports/locust
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        echo "PYTHONPATH is $PYTHONPATH"
         locust -f src/tests/locust/locustfile.py \
           --headless \
           -u 10 -r 2 -t 1m \
           --host https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev \
           --csv reports/locust/results
+
 
     - name: Push Locust metrics to Pushgateway
       run: |
