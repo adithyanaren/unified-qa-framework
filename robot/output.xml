@@ -1,65 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot generator="Robot 7.3.2 (Python 3.11.13 on linux)" generated="2025-10-09T13:28:13.857086" rpa="false" schemaversion="5">
+<robot generator="Robot 7.3.2 (Python 3.11.13 on linux)" generated="2025-10-11T20:01:41.414933" rpa="false" schemaversion="5">
 <suite id="s1" name="Api Tests" source="/home/runner/work/unified-qa-framework/unified-qa-framework/src/tests/Robot/api_tests.robot">
 <test id="s1-t1" name="Verify Lambda CRUD API Health" line="7">
 <kw name="Create Session" owner="RequestsLibrary">
-<msg time="2025-10-09T13:28:13.940980" level="INFO">Creating Session using : alias=mysession, url=https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev, headers={},                     cookies={}, auth=None, timeout=None, proxies=None, verify=False,                     debug=0 </msg>
+<msg time="2025-10-11T20:01:41.502650" level="INFO">Creating Session using : alias=mysession, url=https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev, headers={},                     cookies={}, auth=None, timeout=None, proxies=None, verify=False,                     debug=0 </msg>
 <arg>mysession</arg>
 <arg>${API_URL}</arg>
 <doc>Create Session: create a HTTP session to a server</doc>
-<status status="PASS" start="2025-10-09T13:28:13.940791" elapsed="0.000451"/>
+<status status="PASS" start="2025-10-11T20:01:41.502450" elapsed="0.000420"/>
 </kw>
 <kw name="GET On Session" owner="RequestsLibrary">
-<msg time="2025-10-09T13:28:14.056054" level="INFO">GET Request : url=https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/ 
+<msg time="2025-10-11T20:01:41.603512" level="INFO">GET Request : url=https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/ 
  path_url=/dev/ 
  headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive'} 
  body=None 
  </msg>
-<msg time="2025-10-09T13:28:14.056239" level="INFO">GET Response : url=https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/ 
+<msg time="2025-10-11T20:01:41.603638" level="INFO">GET Response : url=https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/ 
  status=200, reason=OK 
- headers={'Date': 'Thu, 09 Oct 2025 13:28:14 GMT', 'Content-Type': 'application/json', 'Content-Length': '42', 'Connection': 'keep-alive', 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET,POST,PUT,DELETE,OPTIONS', 'access-control-allow-headers': 'Content-Type,Authorization', 'Apigw-Requestid': 'SLnBQjfhoAMESJg='} 
+ headers={'Date': 'Sat, 11 Oct 2025 20:01:41 GMT', 'Content-Type': 'application/json', 'Content-Length': '42', 'Connection': 'keep-alive', 'access-control-allow-methods': 'GET,POST,PUT,DELETE,OPTIONS', 'access-control-allow-headers': 'Content-Type,Authorization', 'access-control-allow-origin': '*', 'Apigw-Requestid': 'STGh7jOQoAMEViQ='} 
  body={"message": "Hello from Lambda CRUD API!"} 
  </msg>
-<msg time="2025-10-09T13:28:14.056327" level="INFO">/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'hp0emdwj90.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+<msg time="2025-10-11T20:01:41.603700" level="INFO">/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'hp0emdwj90.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
   warnings.warn(</msg>
-<msg time="2025-10-09T13:28:14.056500" level="INFO">${response} = &lt;Response [200]&gt;</msg>
+<msg time="2025-10-11T20:01:41.603817" level="INFO">${response} = &lt;Response [200]&gt;</msg>
 <var>${response}</var>
 <arg>mysession</arg>
 <arg>/</arg>
 <doc>Sends a GET request on a previously created HTTP Session.</doc>
-<status status="PASS" start="2025-10-09T13:28:13.941372" elapsed="0.115170"/>
+<status status="PASS" start="2025-10-11T20:01:41.502998" elapsed="0.100859"/>
 </kw>
 <kw name="Should Be Equal As Integers" owner="BuiltIn">
-<msg time="2025-10-09T13:28:14.057460" level="INFO">Argument types are:
+<msg time="2025-10-11T20:01:41.604568" level="INFO">Argument types are:
 &lt;class 'int'&gt;
 &lt;class 'str'&gt;</msg>
 <arg>${response.status_code}</arg>
 <arg>200</arg>
 <doc>Fails if objects are unequal after converting them to integers.</doc>
-<status status="PASS" start="2025-10-09T13:28:14.056768" elapsed="0.000764"/>
+<status status="PASS" start="2025-10-11T20:01:41.604042" elapsed="0.000582"/>
 </kw>
 <kw name="Set Variable" owner="BuiltIn">
-<msg time="2025-10-09T13:28:14.058102" level="INFO">${json} = {'message': 'Hello from Lambda CRUD API!'}</msg>
+<msg time="2025-10-11T20:01:41.605127" level="INFO">${json} = {'message': 'Hello from Lambda CRUD API!'}</msg>
 <var>${json}</var>
 <arg>${response.json()}</arg>
 <doc>Returns the given values which can then be assigned to a variables.</doc>
-<status status="PASS" start="2025-10-09T13:28:14.057649" elapsed="0.000477"/>
+<status status="PASS" start="2025-10-11T20:01:41.604730" elapsed="0.000421"/>
 </kw>
 <kw name="Dictionary Should Contain Key" owner="Collections">
 <arg>${json}</arg>
 <arg>message</arg>
 <doc>Fails if ``key`` is not found from ``dictionary``.</doc>
-<status status="PASS" start="2025-10-09T13:28:14.058255" elapsed="0.000157"/>
+<status status="PASS" start="2025-10-11T20:01:41.605241" elapsed="0.000145"/>
 </kw>
 <kw name="Should Be Equal" owner="BuiltIn">
 <arg>${json["message"]}</arg>
 <arg>Hello from Lambda CRUD API!</arg>
 <doc>Fails if the given objects are unequal.</doc>
-<status status="PASS" start="2025-10-09T13:28:14.058512" elapsed="0.000383"/>
+<status status="PASS" start="2025-10-11T20:01:41.605499" elapsed="0.000380"/>
 </kw>
-<status status="PASS" start="2025-10-09T13:28:13.939996" elapsed="0.119017"/>
+<status status="PASS" start="2025-10-11T20:01:41.501748" elapsed="0.104232"/>
 </test>
-<status status="PASS" start="2025-10-09T13:28:13.857915" elapsed="0.201522"/>
+<status status="PASS" start="2025-10-11T20:01:41.415714" elapsed="0.190651"/>
 </suite>
 <statistics>
 <total>
