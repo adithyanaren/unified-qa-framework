@@ -1,120 +1,97 @@
 import requests
 import subprocess
-import datetime
 import os
 import time
 
 # === Config ===
-PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://54.224.224.239:9090")  # EC2 public Prometheus
-PROMETHEUS_PUSHGATEWAY = os.getenv("PUSHGATEWAY_URL", "http://54.224.224.239:9091")  # EC2 Pushgateway
+PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://54.224.224.239:9090")   # Prometheus on EC2
+PUSHGATEWAY_URL = os.getenv("PUSHGATEWAY_URL", "http://54.224.224.239:9091") # Pushgateway on EC2
 
-COLDSTART_THRESHOLD = 2
-REQUEST_THRESHOLD = 1
-RETRY_DELAY = 5  # seconds
+LATENCY_THRESHOLD = 1500     # ms
+COLDSTART_THRESHOLD = 2      # count
+RETRY_DELAY = 5              # seconds
 
-print(f"[Controller] Using Prometheus at {PROMETHEUS_URL}")
-print(f"[Controller] Using Pushgateway at {PROMETHEUS_PUSHGATEWAY}")
+print(f"[Adaptive-ML] Prometheus → {PROMETHEUS_URL}")
+print(f"[Adaptive-ML] Pushgateway → {PUSHGATEWAY_URL}")
 
-# === Utility functions ===
-def fetch_prometheus_metric(query):
+
+# === Utilities ===
+def fetch_metric(query):
     """Fetch a single metric value from Prometheus."""
-    url = f"{PROMETHEUS_URL}/api/v1/query"
     try:
-        response = requests.get(url, params={"query": query}, timeout=10)
-        response.raise_for_status()
-        result = response.json().get("data", {}).get("result", [])
+        resp = requests.get(f"{PROMETHEUS_URL}/api/v1/query", params={"query": query}, timeout=10)
+        resp.raise_for_status()
+        result = resp.json().get("data", {}).get("result", [])
         if result:
-            value = int(float(result[0]["value"][1]))
-            print(f"[Controller] {query} = {value}")
-            return value
-        else:
-            print(f"[Controller] No data for {query}, returning 0.")
+            val = float(result[0]["value"][1])
+            print(f"[Adaptive-ML] {query} = {val}")
+            return val
+        print(f"[Adaptive-ML] No data for {query}")
     except Exception as e:
-        print(f"[Controller] Error fetching {query}: {e}")
-    return 0
+        print(f"[Adaptive-ML] Error fetching {query}: {e}")
+    return 0.0
 
 
-def trigger_tests(test_type):
-    """Trigger functional, performance, or behavioral tests."""
-    print(f"[Controller] Triggering {test_type} tests...")
+def push_metric(name, value):
+    """Push controller summary metrics to Prometheus via Pushgateway."""
     try:
-        if test_type == "locust":
-            # Run Locust headless against the Lambda API Gateway endpoint
+        data = f"{name} {value}\n"
+        requests.post(f"{PUSHGATEWAY_URL}/metrics/job/adaptive_ml_controller", data=data.encode(), timeout=10)
+        print(f"[Adaptive-ML] Pushed {name}={value}")
+    except Exception as e:
+        print(f"[Adaptive-ML] Failed to push {name}: {e}")
+
+
+def trigger_tests(kind):
+    """Trigger Robot or Locust tests adaptively."""
+    print(f"[Adaptive-ML] Triggering {kind} tests …")
+    try:
+        if kind == "locust":
             subprocess.run([
-                "locust",
-                "-f", "src/tests/locust/locustfile.py",
-                "--headless",
-                "-u", "10",              # number of users
-                "-r", "2",               # spawn rate
-                "-t", "1m",              # duration
-                "--host", "https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev"
+                "locust", "-f", "src/tests/locust/locust_ml_inference.py",
+                "--headless", "-u", "10", "-r", "2", "-t", "1m",
+                "--host", "https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev"
             ], check=False)
-
-        elif test_type == "robot":
-            subprocess.run(["robot", "src/tests/Robot/api_tests.robot"], check=False)
-
-        elif test_type == "pytest":
-            subprocess.run(["pytest", "src/tests/pytest"], check=False)
-
+        elif kind == "robot":
+            subprocess.run(["robot", "src/tests/Robot/ml_inference_tests.robot"], check=False)
     except Exception as e:
-        print(f"[Controller] Error running {test_type} tests: {e}")
+        print(f"[Adaptive-ML] Error running {kind} tests: {e}")
 
 
-
-def push_to_prometheus(metric, value):
-    """Push custom adaptive metrics to Prometheus via Pushgateway."""
-    try:
-        data = f"{metric} {value}\n"
-        requests.post(f"{PROMETHEUS_PUSHGATEWAY}/metrics/job/adaptive_controller", data=data, timeout=10)
-        print(f"[Controller] Pushed {metric}={value} to Pushgateway.")
-    except Exception as e:
-        print(f"[Controller] Failed to push {metric}: {e}")
-
-
-def check_prometheus_connection():
-    """Ensure Prometheus is reachable before proceeding."""
-    try:
-        r = requests.get(f"{PROMETHEUS_URL}/-/ready", timeout=5)
-        if r.status_code == 200:
-            print("[Controller] Prometheus is reachable.")
-            return True
-    except Exception as e:
-        print(f"[Controller] Prometheus not reachable: {e}")
-    return False
-
-
+# === Main adaptive logic ===
 def main():
-    # === NEW: Mode switch for baseline vs adaptive experiments ===
-    mode = os.getenv("QA_MODE", "adaptive").lower()
-    print(f"[Controller] QA_MODE = {mode}")
+    print("[Adaptive-ML] Starting ML Adaptive Controller …")
 
-    if mode == "baseline":
-        print("[Controller] Baseline mode active — skipping adaptive triggers.")
-        return
-    if not check_prometheus_connection():
-        print(f"[Controller] Retrying Prometheus connection in {RETRY_DELAY}s...")
-        time.sleep(RETRY_DELAY)
-        if not check_prometheus_connection():
-            print("[Controller] Prometheus unreachable — skipping adaptive checks.")
-            return
+    # --- Fetch latest ML metrics from Prometheus ---
+    inference_count = fetch_metric("ml_inference_count")
+    latency_ms = fetch_metric("ml_inference_latency_ms")
+    cold_starts = fetch_metric("ml_model_cold_start_count")
 
-    requests_processed = fetch_prometheus_metric("lambda_requests_processed")
-    cold_starts = fetch_prometheus_metric("lambda_cold_start_count")
+    print(f"[Adaptive-ML] InferenceCount={inference_count}, Latency={latency_ms} ms, ColdStarts={cold_starts}")
 
-    print(f"[Controller] RequestsProcessed={requests_processed}, ColdStarts={cold_starts}")
+    # --- Push metrics to Pushgateway for Grafana tracking ---
+    push_metric("ml_inference_count", inference_count)
+    push_metric("ml_inference_latency_ms", latency_ms)
+    push_metric("ml_model_cold_start_count", cold_starts)
 
-    push_to_prometheus("qa_requests_processed", requests_processed)
-    push_to_prometheus("qa_cold_starts", cold_starts)
+    # --- Decision Logic ---
+    action_triggered = False
 
-    # === Adaptive Triggers ===
     if cold_starts > COLDSTART_THRESHOLD:
+        print("⚠️  Multiple model cold starts detected → triggering Locust performance test")
         trigger_tests("locust")
-    if requests_processed < REQUEST_THRESHOLD:
-        trigger_tests("robot")
+        action_triggered = True
 
-    # Push adaptive controller summary metrics
-    push_to_prometheus("adaptive_actions_total", 1)
-    push_to_prometheus("adaptive_triggered_tests", int(cold_starts > COLDSTART_THRESHOLD or requests_processed < REQUEST_THRESHOLD))
+    if latency_ms > LATENCY_THRESHOLD:
+        print("⚠️  High inference latency detected → triggering Robot behavioral test")
+        trigger_tests("robot")
+        action_triggered = True
+
+    # --- Push adaptive controller summary metrics ---
+    push_metric("adaptive_ml_actions_total", 1)
+    push_metric("adaptive_ml_triggered", int(action_triggered))
+
+    print("[Adaptive-ML] Adaptive Controller run complete ✅")
 
 
 if __name__ == "__main__":

@@ -39,6 +39,23 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        
+    - name: Ensure jq is available
+      run: |
+        if ! command -v jq &> /dev/null; then
+          echo "Installing jq..."
+          sudo apt-get update
+          sudo apt-get install -y jq
+        else
+          echo "jq already available"
+        fi
+    # --- Configure AWS Credentials ---
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
 
     # --- Create ngrok tunnel for Pushgateway (fallback) ---
     - name: Start ngrok tunnel (optional)
@@ -56,10 +73,10 @@ jobs:
         mkdir -p reports/pytest
         export PYTHONPATH=$PYTHONPATH:$(pwd)
         echo "PYTHONPATH is $PYTHONPATH"
-        pytest src/tests/pytest --maxfail=1 --disable-warnings -q --junitxml=reports/pytest/results.xml
+        pytest src/tests/ml --maxfail=1 --disable-warnings -q --junitxml=reports/pytest/results.xml
 
 
-    - name: Run Robot Framework tests
+    - name: Run Robot Framework tests (ML Lambda)
       run: |
         mkdir -p reports/robot
         export PYTHONPATH=$PYTHONPATH:$(pwd)
@@ -67,7 +84,8 @@ jobs:
         robot --output reports/robot/output.xml \
               --report reports/robot/report.html \
               --log reports/robot/log.html \
-              src/tests/Robot/api_tests.robot
+              src/tests/Robot/ml_inference_tests.robot
+
 
 
     - name: Run Locust load tests
@@ -78,7 +96,7 @@ jobs:
         locust -f src/tests/locust/locustfile.py \
           --headless \
           -u 10 -r 2 -t 1m \
-          --host https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev \
+          --host https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev \
           --csv reports/locust/results
 
 
@@ -117,14 +135,6 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-    # --- Configure AWS Credentials ---
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-
     # --- Deploy Lambda to Dev Alias ---
     - name: Deploy Lambda to dev alias
       run: |
@@ -162,30 +172,43 @@ jobs:
           --environment "Variables={DUMMY=$(date +%s)}"
         aws lambda wait function-updated --function-name $ML_LAMBDA_NAME
 
-    # --- Fetch CloudWatch Metrics and Push to Prometheus ---
+# --- Fetch CloudWatch Metrics and Push to Prometheus ---
     - name: Fetch and Push CloudWatch Metrics
       run: |
         mkdir -p reports/cloudwatch
         aws cloudwatch get-metric-statistics \
-          --namespace "QAFramework/Serverless" \
-          --metric-name RequestsProcessed \
+          --namespace "QAFrameworkMetrics" \
+          --metric-name InferenceCount \
           --dimensions Name=FunctionName,Value=$ML_LAMBDA_NAME Name=Stage,Value=dev \
           --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
           --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-          --period 60 --statistics Sum > reports/cloudwatch/req.json
+          --period 60 --statistics Sum > reports/cloudwatch/inference.json
         aws cloudwatch get-metric-statistics \
-          --namespace "QAFramework/Serverless" \
-          --metric-name ColdStartCount \
+          --namespace "QAFrameworkMetrics" \
+          --metric-name InferenceLatency \
+          --dimensions Name=FunctionName,Value=$ML_LAMBDA_NAME Name=Stage,Value=dev \
+          --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+          --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+          --period 60 --statistics Average > reports/cloudwatch/latency.json
+        aws cloudwatch get-metric-statistics \
+          --namespace "QAFrameworkMetrics" \
+          --metric-name ModelColdStartCount \
           --dimensions Name=FunctionName,Value=$ML_LAMBDA_NAME Name=Stage,Value=dev \
           --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
           --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
           --period 60 --statistics Sum > reports/cloudwatch/cold.json
-        REQ=$(jq '[.Datapoints[].Sum] | add // 0' reports/cloudwatch/req.json)
+    
+        INFER=$(jq '[.Datapoints[].Sum] | add // 0' reports/cloudwatch/inference.json)
+        LATENCY=$(jq '[.Datapoints[].Average] | add // 0' reports/cloudwatch/latency.json)
         COLD=$(jq '[.Datapoints[].Sum] | add // 0' reports/cloudwatch/cold.json)
-        echo "lambda_requests_processed $REQ" > lambda.prom
-        echo "lambda_cold_start_count $COLD" >> lambda.prom
-        curl --data-binary "@lambda.prom" ${{ env.PUSHGATEWAY_URL }}/metrics/job/lambda/instance/github-actions || true
-        echo "✅ CloudWatch metrics pushed to Prometheus"
+    
+        echo "ml_inference_count $INFER" > ml_lambda.prom
+        echo "ml_inference_latency_ms $LATENCY" >> ml_lambda.prom
+        echo "ml_model_cold_start_count $COLD" >> ml_lambda.prom
+    
+        curl --data-binary "@ml_lambda.prom" ${{ env.PUSHGATEWAY_URL }}/metrics/job/ml_lambda/instance/github-actions || true
+        echo "✅ ML CloudWatch metrics pushed to Prometheus"
+
 
     # --- Run Adaptive QA Controller ---
     - name: Run Adaptive QA Controller
