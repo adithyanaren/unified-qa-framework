@@ -159,25 +159,28 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     # --- Deploy Lambda to Dev Alias ---
-    - name: Deploy Lambda to dev alias
+    - name: Deploy ML Lambda (Container Image)
       run: |
-        zip -r lambda_ml.zip lambda_ml_container/
+        echo "🛠️ Building and deploying ML Lambda container..."
+        cd lambda_ml_container
+        IMAGE_NAME="qa-ml-inference"
+        ECR_URI="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${IMAGE_NAME}:latest"
+        
+        # Authenticate Docker to ECR
+        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+        
+        # Build and push image
+        docker build -t $IMAGE_NAME .
+        docker tag $IMAGE_NAME:latest $ECR_URI
+        docker push $ECR_URI
+        
+        # Update Lambda to use new image
         aws lambda update-function-code \
-          --function-name $ML_LAMBDA_NAME \
-          --zip-file fileb://lambda_ml.zip
-        aws lambda wait function-updated --function-name $ML_LAMBDA_NAME
-        VERSION=$(aws lambda publish-version --function-name $ML_LAMBDA_NAME --query Version --output text)
-        aws lambda update-alias \
-          --function-name $ML_LAMBDA_NAME \
-          --name dev \
-          --function-version $VERSION || \
-        aws lambda create-alias \
-          --function-name $ML_LAMBDA_NAME \
-          --name dev \
-          --function-version $VERSION
-        echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-    # --- Health Check Lambda ---
+        --function-name $ML_LAMBDA_NAME \
+        --image-uri $ECR_URI
+        
+        
+        # --- Health Check Lambda ---
     - name: Health check Lambda alias
       run: |
         echo "Invoking $ML_LAMBDA_NAME:dev..."
@@ -233,14 +236,14 @@ jobs:
         echo "✅ ML CloudWatch metrics pushed to Prometheus"
 
 
-    # --- Run Adaptive QA Controller ---
     - name: Run Adaptive QA Controller
       run: |
-        python src/adaptive_controller.py --lambda $ML_LAMBDA_NAME
+        python adaptive_controller.py --lambda $ML_LAMBDA_NAME
       env:
         PROMETHEUS_URL: ${{ env.PROMETHEUS_URL }}
         PUSHGATEWAY_URL: ${{ env.PUSHGATEWAY_URL }}
         AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
+
 
     # --- Promote to Live Alias ---
     - name: Promote to live alias
