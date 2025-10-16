@@ -13,7 +13,7 @@ class MLInferenceUser(HttpUser):
     host = "https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev"
 
     # -----------------------------
-    # Helper: random payload
+    # Helper: random payloadd
     # -----------------------------
     def generate_payload(self):
         return {
