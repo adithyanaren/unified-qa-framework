@@ -2,10 +2,11 @@ from locust import HttpUser, task, between
 import random, json, time
 
 # =====================================================
-# Unified QA Framework – Locust ML Inference Load Tests
+# Unified QA Framework – ML Inference Load Tests
 # =====================================================
-# Covers 7 core test cases for the ML inference Lambda
-# integrated with CloudWatch → Prometheus → Grafana
+# Simulates 7 behavioral and performance scenarios for
+# the ML inference Lambda API integrated with
+# CloudWatch → Prometheus → Grafana.
 # =====================================================
 
 class MLInferenceUser(HttpUser):
@@ -13,7 +14,7 @@ class MLInferenceUser(HttpUser):
     host = "https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev"
 
     # -----------------------------
-    # Helper: random payloadd
+    # Helper: random payload
     # -----------------------------
     def generate_payload(self):
         return {
@@ -33,49 +34,49 @@ class MLInferenceUser(HttpUser):
         }
 
     # --------------------------------------------------
-    # #1 Health Check Load Test
+    # 1. Health Check Load Test
     # --------------------------------------------------
     @task(1)
     def health_check_load(self):
-        with self.client.get("health/", catch_response=True) as response:
+        with self.client.get("/health", catch_response=True) as response:
             if response.status_code == 200:
                 response.success()
             else:
                 response.failure(f"Health check failed: {response.status_code}")
 
     # --------------------------------------------------
-    # #2 Normal Inference Load Test
+    # 2. Normal Inference Load Test
     # --------------------------------------------------
     @task(2)
     def normal_inference_load(self):
         payload = self.generate_payload()
         headers = {"Content-Type": "application/json"}
-        with self.client.post("predict/", data=json.dumps(payload), headers=headers, catch_response=True) as response:
+        with self.client.post("/predict", data=json.dumps(payload), headers=headers, catch_response=True) as response:
             if response.status_code == 200:
                 response.success()
             else:
                 response.failure(f"Normal inference failed: {response.status_code}")
 
     # --------------------------------------------------
-    # #3 High Concurrency Stress Test
+    # 3. High Concurrency Stress Test
     # --------------------------------------------------
     @task(1)
     def high_concurrency_stress_test(self):
         payload = self.generate_payload()
         headers = {"Content-Type": "application/json"}
-        with self.client.post("predict/", data=json.dumps(payload), headers=headers, catch_response=True) as response:
+        with self.client.post("/predict", data=json.dumps(payload), headers=headers, catch_response=True) as response:
             if response.status_code not in [200, 400]:
                 response.failure(f"Stress test failure: {response.status_code}")
 
     # --------------------------------------------------
-    # #4 Sustained Load Stability Test
+    # 4. Sustained Load Stability Test
     # --------------------------------------------------
     @task(1)
     def sustained_load_stability(self):
         payload = self.generate_payload()
         headers = {"Content-Type": "application/json"}
         start = time.time()
-        with self.client.post("predict/", data=json.dumps(payload), headers=headers, catch_response=True) as response:
+        with self.client.post("/predict", data=json.dumps(payload), headers=headers, catch_response=True) as response:
             duration = time.time() - start
             if duration > 2.0:
                 response.failure(f"High latency detected: {duration:.2f}s")
@@ -83,7 +84,7 @@ class MLInferenceUser(HttpUser):
                 response.success()
 
     # --------------------------------------------------
-    # #5 Payload Variation Test
+    # 5. Payload Variation Test
     # --------------------------------------------------
     @task(1)
     def payload_variation_test(self):
@@ -91,10 +92,10 @@ class MLInferenceUser(HttpUser):
         payload["chol"] = random.randint(100, 400)
         payload["thalach"] = random.randint(80, 210)
         headers = {"Content-Type": "application/json"}
-        self.client.post("predict/", data=json.dumps(payload), headers=headers)
+        self.client.post("/predict", data=json.dumps(payload), headers=headers)
 
     # --------------------------------------------------
-    # #6 Invalid Payload Flood Test
+    # 6. Invalid Payload Flood Test
     # --------------------------------------------------
     @task(1)
     def invalid_payload_flood(self):
@@ -106,21 +107,21 @@ class MLInferenceUser(HttpUser):
         ]
         headers = {"Content-Type": "application/json"}
         payload = random.choice(invalid_payloads)
-        with self.client.post("predict/", data=json.dumps(payload), headers=headers, catch_response=True) as response:
+        with self.client.post("/predict", data=json.dumps(payload), headers=headers, catch_response=True) as response:
             if response.status_code in [400, 422]:
                 response.success()
             else:
                 response.failure(f"Invalid payload not handled: {response.status_code}")
 
     # --------------------------------------------------
-    # #7 Cold Start Observation Test
+    # 7. Cold Start Observation Test
     # --------------------------------------------------
     @task(1)
     def cold_start_observation(self):
-        time.sleep(5)  # simulate idle time to allow container freeze
+        time.sleep(5)
         payload = self.generate_payload()
         headers = {"Content-Type": "application/json"}
-        with self.client.post("predict/", data=json.dumps(payload), headers=headers, catch_response=True) as response:
+        with self.client.post("/predict", data=json.dumps(payload), headers=headers, catch_response=True) as response:
             if response.status_code == 200:
                 response.success()
             else:
@@ -128,16 +129,15 @@ class MLInferenceUser(HttpUser):
 
 
 # =====================================================
-# Example Commands:
+# Usage
 # =====================================================
-# Interactive (UI mode):
+# Interactive UI:
 #   locust -f locust_ml_inference.py
 #
-# Headless mode (for CI/CD or Prometheus metrics):
-#   locust -f locust_ml_inference.py --headless -u 100 -r 10 -t 3m \
-#          --csv=locust_results --only-summary
+# Headless CI/CD mode:
+#   locust -f locust_ml_inference.py --headless -u 50 -r 10 -t 2m --csv=locust_results --only-summary
 #
-# Prometheus Push (manual check after test):
+# Prometheus Push (manual check):
 #   echo "locust_avg_latency_ms $(awk -F, '/Total/ {print $9}' locust_results_stats.csv)" \
 #     | curl --data-binary @- http://54.224.224.239:9091/metrics/job/locust_performance
 #   echo "locust_fail_ratio $(awk -F, '/Total/ {print $7}' locust_results_stats.csv)" \

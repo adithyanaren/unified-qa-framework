@@ -86,32 +86,31 @@ jobs:
               --log reports/robot/log.html \
               src/tests/Robot/ml_inference_tests.robot
 
-
-    - name: Run Locust load tests
+    - name: Run Locust ML Inference Load Test
       run: |
         mkdir -p reports/locust
         export PYTHONPATH=$PYTHONPATH:$(pwd)
-        echo "PYTHONPATH is $PYTHONPATH"
-        locust -f src/tests/locust/locustfile.py \
+        echo "Running Locust ML Inference tests..."
+        locust -f src/tests/locust/locust_ml_inference.py \
           --headless \
-          -u 10 -r 2 -t 1m \
+          -u 25 -r 5 -t 2m \
           --host https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev \
-          --csv reports/locust/results
+          --csv reports/locust/results \
+          --only-summary
 
-
-    - name: Push Locust metrics to Pushgateway
+    - name: Push Locust ML Inference Metrics to Pushgateway
       run: |
         LOCUST_CSV="reports/locust/results_stats.csv"
         REQUESTS=$(awk -F',' 'NR>1 {sum+=$2} END {print sum}' $LOCUST_CSV)
         FAILURES=$(awk -F',' 'NR>1 {sum+=$3} END {print sum}' $LOCUST_CSV)
         AVG_LATENCY=$(awk -F',' 'NR>1 {sum+=$5; count++} END {if(count>0) print sum/count; else print 0}' $LOCUST_CSV)
-        echo "locust_requests_total $REQUESTS" > locust.prom
-        echo "locust_failures_total $FAILURES" >> locust.prom
-        echo "locust_avg_latency_ms $AVG_LATENCY" >> locust.prom
-        curl --data-binary "@locust.prom" ${{ env.PUSHGATEWAY_URL }}/metrics/job/locust/instance/github-actions || true
-        echo "✅ Locust metrics pushed to Prometheus"
-
-    # --- Run ML Lambda Inference Test ---
+        echo "locust_requests_total $REQUESTS" > locust_ml.prom
+        echo "locust_failures_total $FAILURES" >> locust_ml.prom
+        echo "locust_avg_latency_ms $AVG_LATENCY" >> locust_ml.prom
+        curl --data-binary "@locust_ml.prom" ${{ env.PUSHGATEWAY_URL }}/metrics/job/ml_inference_locust/instance/github-actions || true
+        echo "✅ Locust ML Inference metrics pushed to Prometheus"
+        
+        # --- Run ML Lambda Inference Test ---
     - name: Run ML Lambda Inference Test
       run: |
         mkdir -p reports/ml
