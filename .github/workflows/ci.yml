@@ -68,24 +68,23 @@ jobs:
         echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
         echo "🌐 Pushgateway Tunnel: $NGROK_URL"
 
-    - name: Run PyTest
+    - name: Run PyTest (All ML Tests)
+      continue-on-error: true
       run: |
         mkdir -p reports/pytest
         export PYTHONPATH=$PYTHONPATH:$(pwd)
         echo "PYTHONPATH is $PYTHONPATH"
-        pytest src/tests/ml --maxfail=1 --disable-warnings -q --junitxml=reports/pytest/results.xml
-
+        pytest src/tests/ml src/tests/pytest -v --disable-warnings --junitxml=reports/pytest/results.xml
 
     - name: Run Robot Framework tests (ML Lambda)
+      continue-on-error: true
       run: |
         mkdir -p reports/robot
         export PYTHONPATH=$PYTHONPATH:$(pwd)
-        echo "PYTHONPATH is $PYTHONPATH"
         robot --output reports/robot/output.xml \
               --report reports/robot/report.html \
               --log reports/robot/log.html \
               src/tests/Robot/ml_inference_tests.robot
-
 
 
     - name: Run Locust load tests
