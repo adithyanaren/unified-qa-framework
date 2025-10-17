@@ -16,6 +16,7 @@ env:
   PROMETHEUS_URL: "http://54.224.224.239:9090"
   ML_LAMBDA_NAME: "QAFrameworkMLInferenceContainer"
   AWS_ACCOUNT_ID: "976193248434"
+  ECR_URI: "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/qa-ml-inference"  # ✅ Added this line
 
 jobs:
   qa-pipeline:
@@ -133,31 +134,21 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-    # --- ML Experiment Suite (Temporarily Disabled) ---
-    # - name: Run ML Experiment Suite
-    #   run: |
-    #     echo "=== Executing ML Experiment Suite ==="
-    #     mkdir -p reports/ml_experiments
-    #     python src/experiments/ml_latency_experiment.py
-    #     python src/experiments/ml_coldstart_experiment.py
-    #     python src/experiments/ml_concurrency_experiment.py
-    #     python src/experiments/ml_adaptive_feedback_experiment.py
-    #     echo "✅ All ML experiments executed"
-    #   env:
-    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-    # --- Deploy Lambda (ZIP Package) ---
-    - name: Deploy ML Lambda (ZIP Package)
+    # --- Deploy ML Inference Lambda (ECR container) ---
+    - name: Deploy ML Inference Lambda (ECR container)
       run: |
-        echo "🛠️ Packaging and deploying ML Lambda..."
-        zip -r lambda_ml.zip lambda_ml_container/
+        echo "🛠️ Packaging and deploying ML Lambda container..."
+        aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_URI }}
+        
+        docker build -t qa-ml-inference lambda_ml_container/
+        docker tag qa-ml-inference:latest ${{ env.ECR_URI }}:latest
+        docker push ${{ env.ECR_URI }}:latest
+        
         aws lambda update-function-code \
-          --function-name $ML_LAMBDA_NAME \
-          --zip-file fileb://lambda_ml.zip
-        aws lambda wait function-updated --function-name $ML_LAMBDA_NAME
-        echo "✅ Lambda ZIP deployment complete."
-
+          --function-name ${{ env.ML_LAMBDA_NAME }} \
+          --image-uri ${{ env.ECR_URI }}:latest
+        
+        echo "✅ Successfully deployed new ML Lambda container image to AWS"
 
     # --- Health Check ---
     - name: Health check Lambda alias
