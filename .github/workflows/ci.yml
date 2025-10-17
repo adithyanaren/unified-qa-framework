@@ -16,7 +16,7 @@ env:
   PROMETHEUS_URL: "http://54.224.224.239:9090"
   ML_LAMBDA_NAME: "QAFrameworkMLInferenceContainer"
   AWS_ACCOUNT_ID: "976193248434"
-  ECR_URI: "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/qa-ml-inference"  # ✅ Added this line
+  ECR_URI: "976193248434.dkr.ecr.us-east-1.amazonaws.com/qa-ml-inference"
 
 jobs:
   qa-pipeline:
@@ -134,7 +134,20 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-    # --- Deploy ML Inference Lambda (ECR container) ---
+    # --- ML Experiment Suite (Temporarily Disabled) ---
+    # - name: Run ML Experiment Suite
+    #   run: |
+    #     echo "=== Executing ML Experiment Suite ==="
+    #     mkdir -p reports/ml_experiments
+    #     python src/experiments/ml_latency_experiment.py
+    #     python src/experiments/ml_coldstart_experiment.py
+    #     python src/experiments/ml_concurrency_experiment.py
+    #     python src/experiments/ml_adaptive_feedback_experiment.py
+    #     echo "✅ All ML experiments executed"
+    #   env:
+    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
     - name: Deploy ML Inference Lambda (ECR container)
       run: |
         echo "🛠️ Packaging and deploying ML Lambda container..."
