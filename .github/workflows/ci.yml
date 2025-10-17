@@ -15,6 +15,7 @@ env:
   PUSHGATEWAY_URL: "http://54.224.224.239:9091"
   PROMETHEUS_URL: "http://54.224.224.239:9090"
   ML_LAMBDA_NAME: "QAFrameworkMLInferenceContainer"
+  AWS_ACCOUNT_ID: "976193248434"
 
 jobs:
   qa-pipeline:
@@ -39,7 +40,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        
+
     - name: Ensure jq is available
       run: |
         if ! command -v jq &> /dev/null; then
@@ -49,6 +50,7 @@ jobs:
         else
           echo "jq already available"
         fi
+
     # --- Configure AWS Credentials ---
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -57,7 +59,7 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    # --- Create ngrok tunnel for Pushgateway (fallback) ---
+    # --- Optional Ngrok Tunnel ---
     - name: Start ngrok tunnel (optional)
       run: |
         npm install -g ngrok
@@ -68,14 +70,15 @@ jobs:
         echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
         echo "🌐 Pushgateway Tunnel: $NGROK_URL"
 
+    # --- PyTest ---
     - name: Run PyTest (All ML Tests)
       continue-on-error: true
       run: |
         mkdir -p reports/pytest
         export PYTHONPATH=$PYTHONPATH:$(pwd)
-        echo "PYTHONPATH is $PYTHONPATH"
         pytest src/tests/ml src/tests/pytest -v --disable-warnings --junitxml=reports/pytest/results.xml
 
+    # --- Robot Framework ---
     - name: Run Robot Framework tests (ML Lambda)
       continue-on-error: true
       run: |
@@ -86,6 +89,7 @@ jobs:
               --log reports/robot/log.html \
               src/tests/Robot/ml_inference_tests.robot
 
+    # --- Locust Load Test ---
     - name: Run Locust ML Inference Load Test (CI-Safe)
       continue-on-error: true
       run: |
@@ -93,7 +97,6 @@ jobs:
         export PYTHONPATH=$PYTHONPATH:$(pwd)
         echo "🚀 Running Locust ML Inference load tests..."
         
-        # run Locust headless with clean exit-code
         locust -f src/tests/locust/locust_ml_inference.py \
           --headless \
           -u 25 -r 5 -t 2m \
@@ -103,7 +106,6 @@ jobs:
           --exit-code-on-error 0 || true
         
         echo "✅ Locust run completed; parsing metrics..."
-        
         LOCUST_CSV="reports/locust/results_stats.csv"
         if [ -f "$LOCUST_CSV" ]; then
           REQUESTS=$(awk -F',' 'NR>1 {sum+=$2} END {print sum+0}' $LOCUST_CSV)
@@ -122,20 +124,7 @@ jobs:
           echo "⚠️ Locust CSV not found; skipping metric push."
         fi
 
-
-    - name: Push Locust ML Inference Metrics to Pushgateway
-      run: |
-        LOCUST_CSV="reports/locust/results_stats.csv"
-        REQUESTS=$(awk -F',' 'NR>1 {sum+=$2} END {print sum}' $LOCUST_CSV)
-        FAILURES=$(awk -F',' 'NR>1 {sum+=$3} END {print sum}' $LOCUST_CSV)
-        AVG_LATENCY=$(awk -F',' 'NR>1 {sum+=$5; count++} END {if(count>0) print sum/count; else print 0}' $LOCUST_CSV)
-        echo "locust_requests_total $REQUESTS" > locust_ml.prom
-        echo "locust_failures_total $FAILURES" >> locust_ml.prom
-        echo "locust_avg_latency_ms $AVG_LATENCY" >> locust_ml.prom
-        curl --data-binary "@locust_ml.prom" ${{ env.PUSHGATEWAY_URL }}/metrics/job/ml_inference_locust/instance/github-actions || true
-        echo "✅ Locust ML Inference metrics pushed to Prometheus"
-        
-        # --- Run ML Lambda Inference Test ---
+    # --- ML Lambda Inference Test ---
     - name: Run ML Lambda Inference Test
       run: |
         mkdir -p reports/ml
@@ -144,43 +133,47 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-    # --- Run ML Experiments ---
-    - name: Run ML Experiment Suite
-      run: |
-        echo "=== Executing ML Experiment Suite ==="
-        mkdir -p reports/ml_experiments
-        python src/experiments/ml_latency_experiment.py
-        python src/experiments/ml_coldstart_experiment.py
-        python src/experiments/ml_concurrency_experiment.py
-        python src/experiments/ml_adaptive_feedback_experiment.py
-        echo "✅ All ML experiments executed"
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    # --- ML Experiment Suite (Temporarily Disabled) ---
+    # - name: Run ML Experiment Suite
+    #   run: |
+    #     echo "=== Executing ML Experiment Suite ==="
+    #     mkdir -p reports/ml_experiments
+    #     python src/experiments/ml_latency_experiment.py
+    #     python src/experiments/ml_coldstart_experiment.py
+    #     python src/experiments/ml_concurrency_experiment.py
+    #     python src/experiments/ml_adaptive_feedback_experiment.py
+    #     echo "✅ All ML experiments executed"
+    #   env:
+    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-    # --- Deploy Lambda to Dev Alias ---
+    # --- Deploy Lambda (Container Image) ---
     - name: Deploy ML Lambda (Container Image)
       run: |
         echo "🛠️ Building and deploying ML Lambda container..."
         cd lambda_ml_container
         IMAGE_NAME="qa-ml-inference"
-        ECR_URI="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${IMAGE_NAME}:latest"
+        ACCOUNT_ID=$AWS_ACCOUNT_ID
+        ECR_URI="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${IMAGE_NAME}:latest"
         
         # Authenticate Docker to ECR
-        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+        
+        # Ensure repository exists
+        aws ecr describe-repositories --repository-names $IMAGE_NAME || \
+          aws ecr create-repository --repository-name $IMAGE_NAME
         
         # Build and push image
         docker build -t $IMAGE_NAME .
         docker tag $IMAGE_NAME:latest $ECR_URI
         docker push $ECR_URI
         
-        # Update Lambda to use new image
+        # Update Lambda with container image
         aws lambda update-function-code \
-        --function-name $ML_LAMBDA_NAME \
-        --image-uri $ECR_URI
-        
-        
-        # --- Health Check Lambda ---
+          --function-name $ML_LAMBDA_NAME \
+          --image-uri $ECR_URI
+
+    # --- Health Check ---
     - name: Health check Lambda alias
       run: |
         echo "Invoking $ML_LAMBDA_NAME:dev..."
@@ -198,7 +191,7 @@ jobs:
           --environment "Variables={DUMMY=$(date +%s)}"
         aws lambda wait function-updated --function-name $ML_LAMBDA_NAME
 
-# --- Fetch CloudWatch Metrics and Push to Prometheus ---
+    # --- Fetch CloudWatch Metrics ---
     - name: Fetch and Push CloudWatch Metrics
       run: |
         mkdir -p reports/cloudwatch
@@ -209,6 +202,7 @@ jobs:
           --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
           --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
           --period 60 --statistics Sum > reports/cloudwatch/inference.json
+
         aws cloudwatch get-metric-statistics \
           --namespace "QAFrameworkMetrics" \
           --metric-name InferenceLatency \
@@ -216,6 +210,7 @@ jobs:
           --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
           --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
           --period 60 --statistics Average > reports/cloudwatch/latency.json
+
         aws cloudwatch get-metric-statistics \
           --namespace "QAFrameworkMetrics" \
           --metric-name ModelColdStartCount \
@@ -235,7 +230,7 @@ jobs:
         curl --data-binary "@ml_lambda.prom" ${{ env.PUSHGATEWAY_URL }}/metrics/job/ml_lambda/instance/github-actions || true
         echo "✅ ML CloudWatch metrics pushed to Prometheus"
 
-
+    # --- Run Adaptive QA Controller ---
     - name: Run Adaptive QA Controller
       run: |
         python adaptive_controller.py --lambda $ML_LAMBDA_NAME
@@ -244,8 +239,7 @@ jobs:
         PUSHGATEWAY_URL: ${{ env.PUSHGATEWAY_URL }}
         AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
 
-
-    # --- Promote to Live Alias ---
+    # --- Promote to Live ---
     - name: Promote to live alias
       if: success()
       run: |
@@ -259,12 +253,12 @@ jobs:
           --name live \
           --function-version $VERSION
 
-    # --- Update Unified Dashboard ---
+    # --- Update Grafana Dashboard ---
     - name: Update Unified Grafana Dashboard
       run: |
         python generate_dashboard.py --refresh --stage dev --function $ML_LAMBDA_NAME
 
-    # --- Publish Reports to GitHub Pages ---
+    # --- Publish Reports ---
     - name: Deploy reports to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
