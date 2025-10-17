@@ -182,20 +182,27 @@ jobs:
         done
         aws lambda wait function-updated --function-name $ML_LAMBDA_NAME
 
-    # --- Fetch CloudWatch Metrics ---
     - name: Fetch and Push CloudWatch Metrics
       run: |
         mkdir -p reports/cloudwatch
         echo "🕒 Waiting 45s for CloudWatch metrics to update..."
         sleep 45
+
         for METRIC in InferenceCount InferenceLatency ModelColdStartCount; do
+          echo "Fetching $METRIC..."
+          if [ "$METRIC" == "InferenceLatency" ]; then
+            STAT="Average"
+          else
+            STAT="Sum"
+          fi
+
           aws cloudwatch get-metric-statistics \
             --namespace "QAFrameworkMetrics" \
             --metric-name $METRIC \
             --dimensions Name=FunctionName,Value=$ML_LAMBDA_NAME Name=Stage,Value=dev \
             --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
             --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-            --period 60 --statistics Sum,Average > reports/cloudwatch/${METRIC}.json || true
+            --period 60 --statistics $STAT > reports/cloudwatch/${METRIC}.json || true
         done
 
         INFER=$(jq '[.Datapoints[].Sum] | add // 0' reports/cloudwatch/InferenceCount.json || echo 0)
@@ -208,6 +215,7 @@ jobs:
     
         curl --data-binary "@ml_lambda.prom" ${{ env.PUSHGATEWAY_URL }}/metrics/job/ml_lambda/instance/github-actions || true
         echo "✅ ML CloudWatch metrics pushed to Prometheus"
+
 
     # --- Run Adaptive QA Controller ---
     - name: Run Adaptive QA Controller
