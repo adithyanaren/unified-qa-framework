@@ -1,4 +1,4 @@
 {
   "statusCode": 200,
-  "body": "{\"predicted_class\": 0, \"risk_probability\": 0.003, \"inference_latency_ms\": 1.5}"
+  "body": "{\"predicted_class\": 0, \"risk_probability\": 0.003, \"inference_latency_ms\": 1.54}"
 }
