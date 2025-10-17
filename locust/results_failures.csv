@@ -1,1 +1,4 @@
 Method,Name,Error,Occurrences
+GET,/dev/dev/health,CatchResponseError('Health check failed: 404'),410
+POST,/dev/dev/predict,CatchResponseError('Unexpected status 404'),1157
+POST,/dev/dev/predict,CatchResponseError('Invalid payload not handled: 404'),370

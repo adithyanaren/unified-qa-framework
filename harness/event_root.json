@@ -1,10 +1,4 @@
 {
   "statusCode": 200,
-  "headers": {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Content-Type": "application/json"
-  },
-  "body": "{\"message\": \"Hello from Lambda CRUD API!\"}"
+  "body": "{\"predicted_class\": 0, \"risk_probability\": 0.003, \"inference_latency_ms\": 16.34}"
 }
