@@ -147,31 +147,17 @@ jobs:
     #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
     #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-    # --- Deploy Lambda (Container Image) ---
-    - name: Deploy ML Lambda (Container Image)
+    # --- Deploy Lambda (ZIP Package) ---
+    - name: Deploy ML Lambda (ZIP Package)
       run: |
-        echo "🛠️ Building and deploying ML Lambda container..."
-        cd lambda_ml_container
-        IMAGE_NAME="qa-ml-inference"
-        ACCOUNT_ID=$AWS_ACCOUNT_ID
-        ECR_URI="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${IMAGE_NAME}:latest"
-        
-        # Authenticate Docker to ECR
-        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-        
-        # Ensure repository exists
-        aws ecr describe-repositories --repository-names $IMAGE_NAME || \
-          aws ecr create-repository --repository-name $IMAGE_NAME
-        
-        # Build and push image
-        docker build -t $IMAGE_NAME .
-        docker tag $IMAGE_NAME:latest $ECR_URI
-        docker push $ECR_URI
-        
-        # Update Lambda with container image
+        echo "🛠️ Packaging and deploying ML Lambda..."
+        zip -r lambda_ml.zip lambda_ml_container/
         aws lambda update-function-code \
           --function-name $ML_LAMBDA_NAME \
-          --image-uri $ECR_URI
+          --zip-file fileb://lambda_ml.zip
+        aws lambda wait function-updated --function-name $ML_LAMBDA_NAME
+        echo "✅ Lambda ZIP deployment complete."
+
 
     # --- Health Check ---
     - name: Health check Lambda alias
