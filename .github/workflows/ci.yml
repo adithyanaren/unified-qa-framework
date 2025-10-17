@@ -148,20 +148,14 @@ jobs:
     #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
     #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-    - name: Deploy ML Inference Lambda (ECR container)
+    - name: Redeploy Existing ML Inference Lambda Image
       run: |
-        echo "🛠️ Packaging and deploying ML Lambda container..."
-        aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_URI }}
-        
-        docker build -t qa-ml-inference lambda_ml_container/
-        docker tag qa-ml-inference:latest ${{ env.ECR_URI }}:latest
-        docker push ${{ env.ECR_URI }}:latest
-        
+        echo "🚀 Redeploying existing ML container image..."
         aws lambda update-function-code \
           --function-name ${{ env.ML_LAMBDA_NAME }} \
-          --image-uri ${{ env.ECR_URI }}:latest
-        
-        echo "✅ Successfully deployed new ML Lambda container image to AWS"
+          --image-uri 976193248434.dkr.ecr.us-east-1.amazonaws.com/qaframework-ml-inference:v2
+        echo "✅ Existing ECR image successfully redeployed to Lambda"
+
 
     # --- Health Check ---
     - name: Health check Lambda alias
