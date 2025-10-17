@@ -109,7 +109,7 @@ jobs:
         locust -f src/tests/locust/locust_ml_inference.py \
           --headless \
           -u 25 -r 5 -t 2m \
-          --host https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev \
+          --host https://tyoladeyr9.execute-api.us-east-1.amazonaws.com \
           --csv reports/locust/results \
           --only-summary \
           --exit-code-on-error 0 || true
