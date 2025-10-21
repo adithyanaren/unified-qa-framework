@@ -10,7 +10,7 @@ import json, joblib, numpy as np, boto3, os, tempfile, time
 
 S3_BUCKET = "qaframework-ml-bucket-976193248434"
 MODEL_KEY = "heart_disease_xgb_model.pkl"
-CLOUDWATCH_NAMESPACE = "QAFrameworkMetrics"
+CLOUDWATCH_NAMESPACE = "QAFramework/MLInference"
 
 s3 = boto3.client("s3")
 cloudwatch = boto3.client("cloudwatch")
@@ -138,17 +138,17 @@ def lambda_handler(event, context):
             return build_response(500, {"error": "Invalid inference output types"})
 
         result = {
-            "prediction": pred,
-            "confidence": round(conf, 3),
-            "latency_ms": latency
+            "predicted_class": int(pred),
+            "risk_probability": round(float(conf), 3),
+            "inference_latency_ms": latency
         }
 
-        # Ensure every expected key exists
-        expected = {"prediction", "confidence", "latency_ms"}
+        expected = {"predicted_class", "risk_probability", "inference_latency_ms"}
         if not expected.issubset(result.keys()):
             return build_response(500, {"error": "Incomplete inference response"})
 
         return build_response(200, result)
+
 
     except Exception as e:
         print("❌ Inference error:", str(e))

@@ -160,6 +160,27 @@ jobs:
           aws lambda wait function-updated --function-name ${{ env.ML_LAMBDA_NAME }} && break
           echo "Retrying Lambda wait..."; sleep 15
         done
+# --- Verify Lambda Health (Post-Deployment) ---
+    - name: Verify Lambda Health (Post-Deployment)
+      run: |
+        echo "🚀 Invoking deployed ML inference Lambda..."
+        aws lambda invoke \
+          --function-name ${{ env.ML_LAMBDA_NAME }} \
+          --cli-binary-format raw-in-base64-out \
+          --payload '{"path":"/health"}' \
+          response.json \
+          --region ${{ env.AWS_REGION }}
+    
+        echo "Lambda Response:"
+        cat response.json
+    
+        STATUS=$(cat response.json | jq -r '.statusCode')
+        if [ "$STATUS" -ne 200 ]; then
+          echo "❌ Lambda health check failed! Response code: $STATUS"
+          exit 1
+        else
+          echo "✅ Lambda health check passed successfully!"
+        fi
 
     # --- Health Check ---
     - name: Health check Lambda alias
