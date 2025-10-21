@@ -1,2 +1,3 @@
 Method,Name,Error,Occurrences
-POST,/dev/predict,CatchResponseError('Invalid payload not handled: 500'),23
+POST,/dev/predict,CatchResponseError('Invalid payload not handled: 500'),92
+POST,/dev/predict,CatchResponseError('Invalid payload not handled: 200'),262
