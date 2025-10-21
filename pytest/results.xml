@@ -1,41 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="13" skipped="0" tests="29" time="14.011" timestamp="2025-10-21T09:56:58.217359+00:00" hostname="runnervmwhb2z"><testcase classname="src.tests.ml.test_ml_inference_lambda" name="test_ml_inference_lambda" time="9.193"><failure message="AssertionError: Missing key: predicted_class&#10;assert 'predicted_class' in {'error': 'Missing field: Chest_Pain'}">def test_ml_inference_lambda():
-        """Functional + latency test for the ML inference Lambda (validated)."""
-        client = boto3.client("lambda")
-    
-        payload = {
-            "Age": 55,
-            "Gender": 1,
-            "High_BP": 1,
-            "High_Cholesterol": 1,
-            "Diabetes": 0,
-            "Smoking": 0,
-            "Obesity": 1
-        }
-    
-        print(f"[INFO] Invoking Lambda: {LAMBDA_NAME}")
-        start = time.time()
-        response = client.invoke(
-            FunctionName=LAMBDA_NAME,
-            InvocationType="RequestResponse",
-            Payload=json.dumps(payload)
-        )
-        latency = round((time.time() - start) * 1000, 2)
-    
-        raw_payload = response["Payload"].read()
-        body = json.loads(raw_payload)
-    
-        # Parse nested JSON body
-        if isinstance(body, dict) and "body" in body:
-            body = json.loads(body["body"])
-    
-        print("[INFO] Final Parsed Response:", body)
-    
-        # Validations
-&gt;       assert "predicted_class" in body, "Missing key: predicted_class"
-E       AssertionError: Missing key: predicted_class
-E       assert 'predicted_class' in {'error': 'Missing field: Chest_Pain'}
-
-src/tests/ml/test_ml_inference_lambda.py:48: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_api" name="test_lambda_returns_expected_message" time="1.025" /><testcase classname="src.tests.pytest.test_api" name="test_invalid_path_returns_404" time="0.117" /><testcase classname="src.tests.pytest.test_api" name="test_lambda_response_time" time="0.160" /><testcase classname="src.tests.pytest.test_api" name="test_lambda_response_time_cold" time="0.119" /><testcase classname="src.tests.pytest.test_api" name="test_lambda_response_time_warm" time="0.201" /><testcase classname="src.tests.pytest.test_api" name="test_lambda_security_headers" time="0.100" /><testcase classname="src.tests.pytest.test_api" name="test_lambda_idempotency" time="0.181" /><testcase classname="src.tests.pytest.test_api" name="test_create_item" time="0.236" /><testcase classname="src.tests.pytest.test_api" name="test_get_item" time="0.239" /><testcase classname="src.tests.pytest.test_api" name="test_update_item" time="0.158" /><testcase classname="src.tests.pytest.test_api" name="test_delete_item" time="0.122" /><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_health_endpoint" time="0.465" /><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_predict_valid_payload" time="0.097"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">@pytest.mark.functional
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="12" skipped="0" tests="29" time="5.866" timestamp="2025-10-21T10:11:43.556723+00:00" hostname="runnervmwhb2z"><testcase classname="src.tests.ml.test_ml_inference_lambda" name="test_ml_inference_lambda" time="0.365" /><testcase classname="src.tests.pytest.test_api" name="test_lambda_returns_expected_message" time="0.915" /><testcase classname="src.tests.pytest.test_api" name="test_invalid_path_returns_404" time="0.145" /><testcase classname="src.tests.pytest.test_api" name="test_lambda_response_time" time="0.133" /><testcase classname="src.tests.pytest.test_api" name="test_lambda_response_time_cold" time="0.154" /><testcase classname="src.tests.pytest.test_api" name="test_lambda_response_time_warm" time="0.263" /><testcase classname="src.tests.pytest.test_api" name="test_lambda_security_headers" time="0.132" /><testcase classname="src.tests.pytest.test_api" name="test_lambda_idempotency" time="0.275" /><testcase classname="src.tests.pytest.test_api" name="test_create_item" time="0.273" /><testcase classname="src.tests.pytest.test_api" name="test_get_item" time="0.259" /><testcase classname="src.tests.pytest.test_api" name="test_update_item" time="0.146" /><testcase classname="src.tests.pytest.test_api" name="test_delete_item" time="0.152" /><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_health_endpoint" time="0.480" /><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_predict_valid_payload" time="0.117"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">@pytest.mark.functional
     def test_predict_valid_payload():
         """Valid inference"""
         response, latency = measure_latency(requests.post, f"{BASE_URL}/predict", json=VALID_PAYLOAD)
@@ -44,7 +7,7 @@ src/tests/ml/test_ml_inference_lambda.py:48: AssertionError</failure></testcase>
 E       assert 500 == 200
 E        +  where 500 = &lt;Response [500]&gt;.status_code
 
-src/tests/pytest/test_ml_api_functional.py:51: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_predict_edge_cases[payload0]" time="0.077"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">payload = {'age': 58, 'cp': 2, 'sex': 1}
+src/tests/pytest/test_ml_api_functional.py:51: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_predict_edge_cases[payload0]" time="0.159"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">payload = {'age': 58, 'cp': 2, 'sex': 1}
 
     @pytest.mark.functional
     @pytest.mark.parametrize("payload", [MISSING_FIELD_PAYLOAD, INVALID_TYPE_PAYLOAD, {}, {f"f{i}": i for i in range(1000)}])
@@ -55,7 +18,7 @@ src/tests/pytest/test_ml_api_functional.py:51: AssertionError</failure></testcas
 E       assert 500 == 200
 E        +  where 500 = &lt;Response [500]&gt;.status_code
 
-src/tests/pytest/test_ml_api_functional.py:62: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_predict_edge_cases[payload1]" time="0.081"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">payload = {'age': 'fifty', 'sex': 'male'}
+src/tests/pytest/test_ml_api_functional.py:62: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_predict_edge_cases[payload1]" time="0.104"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">payload = {'age': 'fifty', 'sex': 'male'}
 
     @pytest.mark.functional
     @pytest.mark.parametrize("payload", [MISSING_FIELD_PAYLOAD, INVALID_TYPE_PAYLOAD, {}, {f"f{i}": i for i in range(1000)}])
@@ -66,7 +29,7 @@ src/tests/pytest/test_ml_api_functional.py:62: AssertionError</failure></testcas
 E       assert 500 == 200
 E        +  where 500 = &lt;Response [500]&gt;.status_code
 
-src/tests/pytest/test_ml_api_functional.py:62: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_predict_edge_cases[payload2]" time="0.085"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">payload = {}
+src/tests/pytest/test_ml_api_functional.py:62: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_predict_edge_cases[payload2]" time="0.106"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">payload = {}
 
     @pytest.mark.functional
     @pytest.mark.parametrize("payload", [MISSING_FIELD_PAYLOAD, INVALID_TYPE_PAYLOAD, {}, {f"f{i}": i for i in range(1000)}])
@@ -77,7 +40,7 @@ src/tests/pytest/test_ml_api_functional.py:62: AssertionError</failure></testcas
 E       assert 500 == 200
 E        +  where 500 = &lt;Response [500]&gt;.status_code
 
-src/tests/pytest/test_ml_api_functional.py:62: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_predict_edge_cases[payload3]" time="0.107"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">payload = {'f0': 0, 'f1': 1, 'f10': 10, 'f100': 100, ...}
+src/tests/pytest/test_ml_api_functional.py:62: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_predict_edge_cases[payload3]" time="0.149"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">payload = {'f0': 0, 'f1': 1, 'f10': 10, 'f100': 100, ...}
 
     @pytest.mark.functional
     @pytest.mark.parametrize("payload", [MISSING_FIELD_PAYLOAD, INVALID_TYPE_PAYLOAD, {}, {f"f{i}": i for i in range(1000)}])
@@ -88,7 +51,7 @@ src/tests/pytest/test_ml_api_functional.py:62: AssertionError</failure></testcas
 E       assert 500 == 200
 E        +  where 500 = &lt;Response [500]&gt;.status_code
 
-src/tests/pytest/test_ml_api_functional.py:62: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_repeated_inferences_consistency" time="0.075"><failure message="KeyError: 'predicted_class'">@pytest.mark.functional
+src/tests/pytest/test_ml_api_functional.py:62: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_repeated_inferences_consistency" time="0.114"><failure message="KeyError: 'predicted_class'">@pytest.mark.functional
     def test_repeated_inferences_consistency():
         """Same inputs yield stable predictions"""
 &gt;       preds = [requests.post(f"{BASE_URL}/predict", json=VALID_PAYLOAD).json()["predicted_class"] for _ in range(3)]
@@ -97,13 +60,13 @@ src/tests/pytest/test_ml_api_functional.py:62: AssertionError</failure></testcas
 src/tests/pytest/test_ml_api_functional.py:69: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-.0 = &lt;range_iterator object at 0x7fdfd5e671e0&gt;
+.0 = &lt;range_iterator object at 0x7f431bc85740&gt;
 
 &gt;   preds = [requests.post(f"{BASE_URL}/predict", json=VALID_PAYLOAD).json()["predicted_class"] for _ in range(3)]
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 E   KeyError: 'predicted_class'
 
-src/tests/pytest/test_ml_api_functional.py:69: KeyError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_latency_under_threshold" time="0.066" /><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_missing_content_type" time="0.102" /><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_prediction_output_type_and_bounds" time="0.107"><failure message="KeyError: 'predicted_class'">@pytest.mark.functional
+src/tests/pytest/test_ml_api_functional.py:69: KeyError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_latency_under_threshold" time="0.109" /><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_missing_content_type" time="0.101" /><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_prediction_output_type_and_bounds" time="0.104"><failure message="KeyError: 'predicted_class'">@pytest.mark.functional
     def test_prediction_output_type_and_bounds():
         """Ensure prediction is integer and probability bounded."""
         response = requests.post(f"{BASE_URL}/predict", json=VALID_PAYLOAD)
@@ -112,7 +75,7 @@ src/tests/pytest/test_ml_api_functional.py:69: KeyError</failure></testcase><tes
                           ^^^^^^^^^^^^^^^^^^^^^^^
 E       KeyError: 'predicted_class'
 
-src/tests/pytest/test_ml_api_functional.py:92: KeyError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_response_contains_latency_metric" time="0.077"><failure message="AssertionError: assert 'inference_latency_ms' in {'message': 'Internal Server Error'}">@pytest.mark.functional
+src/tests/pytest/test_ml_api_functional.py:92: KeyError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_response_contains_latency_metric" time="0.102"><failure message="AssertionError: assert 'inference_latency_ms' in {'message': 'Internal Server Error'}">@pytest.mark.functional
     def test_response_contains_latency_metric():
         """Verify model returns internal latency metric."""
         response = requests.post(f"{BASE_URL}/predict", json=VALID_PAYLOAD)
@@ -120,7 +83,7 @@ src/tests/pytest/test_ml_api_functional.py:92: KeyError</failure></testcase><tes
 &gt;       assert "inference_latency_ms" in data
 E       AssertionError: assert 'inference_latency_ms' in {'message': 'Internal Server Error'}
 
-src/tests/pytest/test_ml_api_functional.py:100: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_inference_with_float_values" time="0.077"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">@pytest.mark.functional
+src/tests/pytest/test_ml_api_functional.py:100: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_inference_with_float_values" time="0.104"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">@pytest.mark.functional
     def test_inference_with_float_values():
         """Allow float inputs if numeric-like."""
         payload = VALID_PAYLOAD.copy()
@@ -130,7 +93,7 @@ src/tests/pytest/test_ml_api_functional.py:100: AssertionError</failure></testca
 E       assert 500 == 200
 E        +  where 500 = &lt;Response [500]&gt;.status_code
 
-src/tests/pytest/test_ml_api_functional.py:110: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_batch_like_requests" time="0.078"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">@pytest.mark.functional
+src/tests/pytest/test_ml_api_functional.py:110: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_batch_like_requests" time="0.125"><failure message="assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">@pytest.mark.functional
     def test_batch_like_requests():
         """Simulate mini-batch inference calls sequentially."""
         for _ in range(5):
@@ -139,7 +102,7 @@ src/tests/pytest/test_ml_api_functional.py:110: AssertionError</failure></testca
 E           assert 500 == 200
 E            +  where 500 = &lt;Response [500]&gt;.status_code
 
-src/tests/pytest/test_ml_api_functional.py:119: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_concurrent_requests" time="0.127"><failure message="assert False&#10; +  where False = all(&lt;generator object test_concurrent_requests.&lt;locals&gt;.&lt;genexpr&gt; at 0x7fdfd565bac0&gt;)">@pytest.mark.functional
+src/tests/pytest/test_ml_api_functional.py:119: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_concurrent_requests" time="0.171"><failure message="assert False&#10; +  where False = all(&lt;generator object test_concurrent_requests.&lt;locals&gt;.&lt;genexpr&gt; at 0x7f431b320450&gt;)">@pytest.mark.functional
     def test_concurrent_requests():
         """Simulate multiple threads calling inference."""
         results = []
@@ -153,9 +116,9 @@ src/tests/pytest/test_ml_api_functional.py:119: AssertionError</failure></testca
         [t.join() for t in threads]
 &gt;       assert all(code == 200 for code in results)
 E       assert False
-E        +  where False = all(&lt;generator object test_concurrent_requests.&lt;locals&gt;.&lt;genexpr&gt; at 0x7fdfd565bac0&gt;)
+E        +  where False = all(&lt;generator object test_concurrent_requests.&lt;locals&gt;.&lt;genexpr&gt; at 0x7f431b320450&gt;)
 
-src/tests/pytest/test_ml_api_functional.py:134: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_invalid_method_handling" time="0.055" /><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_response_is_json" time="0.103" /><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_response_has_expected_keys_subset" time="0.069"><failure message="AssertionError: assert False&#10; +  where False = &lt;built-in method issubset of set object at 0x7fdfd55e52a0&gt;({'message'})&#10; +    where &lt;built-in method issubset of set object at 0x7fdfd55e52a0&gt; = {'predicted_class', 'risk_probability'}.issubset">@pytest.mark.functional
+src/tests/pytest/test_ml_api_functional.py:134: AssertionError</failure></testcase><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_invalid_method_handling" time="0.086" /><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_response_is_json" time="0.103" /><testcase classname="src.tests.pytest.test_ml_api_functional" name="test_response_has_expected_keys_subset" time="0.114"><failure message="AssertionError: assert False&#10; +  where False = &lt;built-in method issubset of set object at 0x7f431b9790e0&gt;({'message'})&#10; +    where &lt;built-in method issubset of set object at 0x7f431b9790e0&gt; = {'predicted_class', 'risk_probability'}.issubset">@pytest.mark.functional
     def test_response_has_expected_keys_subset():
         """Check required key subset present."""
         r = requests.post(f"{BASE_URL}/predict", json=VALID_PAYLOAD)
@@ -163,7 +126,7 @@ src/tests/pytest/test_ml_api_functional.py:134: AssertionError</failure></testca
         expected = {"predicted_class", "risk_probability"}
 &gt;       assert expected.issubset(keys)
 E       AssertionError: assert False
-E        +  where False = &lt;built-in method issubset of set object at 0x7fdfd55e52a0&gt;({'message'})
-E        +    where &lt;built-in method issubset of set object at 0x7fdfd55e52a0&gt; = {'predicted_class', 'risk_probability'}.issubset
+E        +  where False = &lt;built-in method issubset of set object at 0x7f431b9790e0&gt;({'message'})
+E        +    where &lt;built-in method issubset of set object at 0x7f431b9790e0&gt; = {'predicted_class', 'risk_probability'}.issubset
 
 src/tests/pytest/test_ml_api_functional.py:158: AssertionError</failure></testcase></testsuite></testsuites>
