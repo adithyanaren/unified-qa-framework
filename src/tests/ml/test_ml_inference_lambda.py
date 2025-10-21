@@ -17,19 +17,24 @@ def test_ml_inference_lambda():
     client = boto3.client("lambda")
 
     payload = {
-        "Age": 45,
-        "Sex": 1,
-        "Chest_Pain": 0,
-        "Blood_Pressure": 130,
-        "Cholesterol": 200,
-        "Fasting_Blood_Sugar": 0,
-        "Resting_ECG": 1,
-        "Max_Heart_Rate": 150,
-        "Exercise_Angina": 0,
-        "Oldpeak": 1.2,
-        "Slope": 2,
-        "Ca": 0,
-        "Thal": 2
+        "Chest_Pain": 1,
+        "Shortness_of_Breath": 0,
+        "Fatigue": 1,
+        "Palpitations": 0,
+        "Dizziness": 0,
+        "Swelling": 0,
+        "Pain_Arms_Jaw_Back": 0,
+        "Cold_Sweats_Nausea": 0,
+        "High_BP": 1,
+        "High_Cholesterol": 1,
+        "Diabetes": 0,
+        "Smoking": 0,
+        "Obesity": 0,
+        "Sedentary_Lifestyle": 1,
+        "Family_History": 1,
+        "Chronic_Stress": 0,
+        "Gender": 1,
+        "Age": 52
     }
 
     print(f"[INFO] Invoking Lambda: {LAMBDA_NAME}")

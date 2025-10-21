@@ -25,10 +25,26 @@ def measure_latency(func, *args, **kwargs):
 
 
 VALID_PAYLOAD = {
-    "age": 58, "sex": 1, "cp": 2, "trestbps": 130,
-    "chol": 230, "fbs": 0, "restecg": 1, "thalach": 150,
-    "exang": 0, "oldpeak": 1.5, "slope": 2, "ca": 0, "thal": 3
+    "Chest_Pain": 1,
+    "Shortness_of_Breath": 0,
+    "Fatigue": 1,
+    "Palpitations": 0,
+    "Dizziness": 0,
+    "Swelling": 0,
+    "Pain_Arms_Jaw_Back": 0,
+    "Cold_Sweats_Nausea": 0,
+    "High_BP": 1,
+    "High_Cholesterol": 1,
+    "Diabetes": 0,
+    "Smoking": 0,
+    "Obesity": 0,
+    "Sedentary_Lifestyle": 1,
+    "Family_History": 1,
+    "Chronic_Stress": 0,
+    "Gender": 1,
+    "Age": 52
 }
+
 MISSING_FIELD_PAYLOAD = {"age": 58, "sex": 1, "cp": 2}
 INVALID_TYPE_PAYLOAD = {"age": "fifty", "sex": "male"}
 
