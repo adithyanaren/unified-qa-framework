@@ -272,7 +272,7 @@ jobs:
       run: |
         python generate_dashboard.py --refresh --stage dev --function $ML_LAMBDA_NAME || echo "⚠️ Grafana update skipped"
 
-    # --- Publish Reports ---
+    # --- Publish Reports --
     - name: Deploy reports to GitHub Pages
       if: always()
       uses: peaceiris/actions-gh-pages@v3
