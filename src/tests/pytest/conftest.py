@@ -1,3 +1,11 @@
+# conftest.py — ensures src imports work everywhere + adds pytest-html extras
+import sys, os
+
+# --- PATH FIX ---
+# Guarantee project root ("QAFramework-Research") is on sys.path so that
+# imports like `from src.utils.config import ...` work under Streamlit or CI
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+
 import pytest
 import pytest_html
 
