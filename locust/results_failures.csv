@@ -1,4 +1,4 @@
 Method,Name,Error,Occurrences
-POST,/predict,CatchResponseError('Invalid payload not handled: 404'),377
-POST,/predict,CatchResponseError('Unexpected status 404'),1167
-GET,/health,CatchResponseError('Health check failed: 404'),365
+POST,/predict,CatchResponseError('Invalid payload not handled: 404'),368
+POST,/predict,CatchResponseError('Unexpected status 404'),1160
+GET,/health,CatchResponseError('Health check failed: 404'),348
