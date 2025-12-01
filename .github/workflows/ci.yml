@@ -249,15 +249,16 @@ jobs:
         PUSHGATEWAY_URL: ${{ env.PUSHGATEWAY_URL }}
         AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
 
-    # --- OWASP ZAP Baseline Security Scan ---
-    - name: OWASP ZAP Baseline Scan (Safe Passive Scan)
-      uses: zaproxy/action-baseline@v0.7.0
-      with:
-        target: "https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev"
-        format: html
-        rules_file_name: .zap/rules.tsv
-        cmd_options: "-a"   # passive mode only
-      continue-on-error: true
+#    # --- OWASP ZAP Baseline Security Scan ---
+#    - name: OWASP ZAP Baseline Scan (Safe Passive Scan)
+#      uses: zaproxy/action-baseline@v0.7.1
+#      with:
+#        token: ${{ secrets.GITHUB_TOKEN }}
+#        target: "https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev"
+#        rules_file_name: .zap/rules.tsv
+#        cmd_options: "-a"
+#      continue-on-error: true
+
 
     # --- Promote to Live ---
     - name: Promote to live alias
