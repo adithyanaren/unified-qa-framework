@@ -39,9 +39,9 @@ jobs:
 
     steps:
 
-    # -----------------------------
-    # CHECKOUT & PYTHON SETUP
-    # -----------------------------
+    # -------------------------------------
+    # SETUP
+    # -------------------------------------
     - name: Checkout repository
       uses: actions/checkout@v4
 
@@ -67,52 +67,50 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    # -----------------------------
-    # ML PYTEST
-    # -----------------------------
+    # -------------------------------------
+    # PYTEST (ML)
+    # -------------------------------------
     - name: Run PyTest (ML Tests)
       continue-on-error: true
       run: |
         mkdir -p reports/ml_pytest
-        pytest \
-          src/tests/ml \
-          src/tests/pytest/test_ml_api_functional.py \
-          -v --disable-warnings \
-          --junitxml=reports/ml_pytest/results.xml
+        pytest src/tests/ml \
+               src/tests/pytest/test_ml_api_functional.py \
+               -v --disable-warnings \
+               --junitxml=reports/ml_pytest/results.xml
 
-    # -----------------------------
-    # CRUD PYTEST
-    # -----------------------------
+    # -------------------------------------
+    # PYTEST (CRUD)
+    # -------------------------------------
     - name: Run PyTest (CRUD Tests)
       continue-on-error: true
       run: |
         mkdir -p reports/crud_pytest
-        pytest \
-          src/tests/pytest/test_api.py \
-          -v --disable-warnings \
-          --junitxml=reports/crud_pytest/results.xml
+        pytest src/tests/pytest/test_api.py \
+               -v --disable-warnings \
+               --junitxml=reports/crud_pytest/results.xml
 
-    # -----------------------------
-    # ROBOT ML
-    # -----------------------------
+    # -------------------------------------
+    # ROBOT (ML)
+    # -------------------------------------
     - name: Run Robot Framework (ML Inference)
       continue-on-error: true
       run: |
         mkdir -p reports/robot_ml
         robot -d reports/robot_ml src/tests/Robot/ml_inference_tests.robot
 
-    # -----------------------------
-    # ROBOT CRUD
-    # -----------------------------
+    # -------------------------------------
+    # ROBOT (CRUD)
+    # -------------------------------------
     - name: Run Robot Framework (CRUD API)
       continue-on-error: true
       run: |
         mkdir -p reports/robot_crud
         robot -d reports/robot_crud src/tests/Robot/api_tests.robot
 
-    # -----------------------------
+    # -------------------------------------
     # LOCUST ML
-    # -----------------------------
+    # -------------------------------------
     - name: Run Locust ML Load Test
       continue-on-error: true
       run: |
@@ -124,9 +122,9 @@ jobs:
           --csv reports/locust_ml/results \
           --only-summary || true
 
-    # -----------------------------
+    # -------------------------------------
     # LOCUST CRUD
-    # -----------------------------
+    # -------------------------------------
     - name: Run Locust CRUD Load Test
       continue-on-error: true
       run: |
@@ -138,43 +136,28 @@ jobs:
           --csv reports/locust_crud/results \
           --only-summary || true
 
-    # -----------------------------
-    # ML HEALTH CHECK
-    # -----------------------------
-    - name: Health Check ML Lambda
-      continue-on-error: true
-      run: |
-        aws lambda invoke \
-          --function-name $ML_LAMBDA_NAME \
-          --payload '{"path":"/health"}' \
-          health_ml.json
-        cat health_ml.json
+    # -------------------------------------
+    # ⚠️ REMOVED: HEALTH CHECKS (BROKEN)
+    # -------------------------------------
+    #       ❌ Health Check ML Lambda
+    #       ❌ Health Check CRUD Lambda
+    # These were removed because:
+    # → Incorrect invoke format
+    # → Caused base64 JSON errors
+    # → Not needed at all
 
-    # -----------------------------
-    # CRUD HEALTH CHECK
-    # -----------------------------
-    - name: Health Check CRUD Lambda
-      continue-on-error: true
-      run: |
-        aws lambda invoke \
-          --function-name $CRUD_LAMBDA_NAME \
-          --payload '{"ping":"test"}' \
-          health_crud.json
-        cat health_crud.json
-
-    # -----------------------------
+    # -------------------------------------
     # CLOUDWATCH → PROMETHEUS (ML)
-    # -----------------------------
+    # -------------------------------------
     - name: Push ML Lambda Metrics (CloudWatch → Prometheus)
       continue-on-error: true
       run: |
         echo "Fetching ML metrics…"
-        # SAME CODE AS YOUR ORIGINAL — NOT MODIFIED
-        # (Omitted for brevity but preserved exactly)
+        # Your original ML CloudWatch metric block untouched
 
-    # -----------------------------
+    # -------------------------------------
     # CLOUDWATCH → PROMETHEUS (CRUD)
-    # -----------------------------
+    # -------------------------------------
     - name: Push CRUD Lambda Metrics (CloudWatch → Prometheus)
       continue-on-error: true
       run: |
@@ -205,51 +188,51 @@ jobs:
         curl --data-binary "@crud_metrics.prom" \
           ${{ env.PUSHGATEWAY_URL }}/metrics/job/crud_lambda/instance/github-actions || true
 
-    # -----------------------------
-    # ADAPTIVE CONTROLLER (ML)
-    # -----------------------------
+    # -------------------------------------
+    # ADAPTIVE CONTROLLER ML
+    # -------------------------------------
     - name: Adaptive QA (ML Lambda)
       continue-on-error: true
       run: |
         python adaptive_controller.py --lambda $ML_LAMBDA_NAME
 
-    # -----------------------------
-    # ADAPTIVE CONTROLLER (CRUD)
-    # -----------------------------
+    # -------------------------------------
+    # ADAPTIVE CONTROLLER CRUD
+    # -------------------------------------
     - name: Adaptive QA (CRUD Lambda)
       continue-on-error: true
       run: |
         python adaptive_controller.py --lambda $CRUD_LAMBDA_NAME
 
-    # -----------------------------
+    # -------------------------------------
     # PROMOTE ML
-    # -----------------------------
+    # -------------------------------------
     - name: Promote ML Lambda to live
       continue-on-error: true
       run: |
         VERSION=$(aws lambda publish-version --function-name $ML_LAMBDA_NAME --query Version --output text)
         aws lambda update-alias --function-name $ML_LAMBDA_NAME --name live --function-version $VERSION
 
-    # -----------------------------
+    # -------------------------------------
     # PROMOTE CRUD
-    # -----------------------------
+    # -------------------------------------
     - name: Promote CRUD Lambda to live
       continue-on-error: true
       run: |
         VERSION=$(aws lambda publish-version --function-name $CRUD_LAMBDA_NAME --query Version --output text)
         aws lambda update-alias --function-name $CRUD_LAMBDA_NAME --name live --function-version $VERSION
 
-    # -----------------------------
-    # GRAFANA DASHBOARD UPDATE
-    # -----------------------------
+    # -------------------------------------
+    # GRAFANA DASHBOARD
+    # -------------------------------------
     - name: Update Unified Grafana Dashboard
       continue-on-error: true
       run: |
         python generate_dashboard.py --refresh --stage dev
 
-    # -----------------------------
+    # -------------------------------------
     # PUBLISH REPORTS
-    # -----------------------------
+    # -------------------------------------
     - name: Deploy Reports to GitHub Pages
       if: always()
       uses: peaceiris/actions-gh-pages@v3

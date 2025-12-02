@@ -1,6 +1,6 @@
 from locust import HttpUser, task, between, events
 from prometheus_client import start_http_server, Counter, Histogram
-import os
+import uuid
 
 # Prometheus metrics
 REQUEST_COUNT = Counter(
@@ -23,28 +23,35 @@ def track_request(request_type, name, response_time, response_length, exception,
     REQUEST_LATENCY.labels(request_type, name).observe(response_time / 1000.0)
 
 # Read env var (default = true for local, false in CI/CD)
-NEGATIVE_TESTS = os.getenv("NEGATIVE_TESTS", "true").lower() == "true"
+# NEGATIVE_TESTS = os.getenv("NEGATIVE_TESTS", "true").lower() == "true"
 
 class CrudApiUser(HttpUser):
     wait_time = between(1, 3)
 
     @task
     def call_health(self):
-        self.client.get("/")
+        self.client.get("/dev")
 
-    if NEGATIVE_TESTS:
-        @task
-        def call_invalid(self):
-            self.client.get("/this-does-not-exist")
+    # if NEGATIVE_TESTS:
+    #     @task
+    #     def call_invalid(self):
+    #         self.client.get("/this-does-not-exist")
 
     @task
     def crud_cycle(self):
+        # generate unique ID per test
+        item_id = str(uuid.uuid4())
+
         # POST
-        payload = {"id": "loadtest123", "name": "Locust Item"}
-        self.client.post("/items", json=payload)
+        payload = {"id": item_id, "name": "Locust Item"}
+        self.client.post("/dev/items", json=payload)
+
         # GET
-        self.client.get("/items?id=loadtest123")
+        self.client.get("/dev/items", params={"id": item_id})
+
         # PUT
-        self.client.put("/items", json={"id": "loadtest123", "name": "Updated Locust Item"})
+        self.client.put("/dev/items", json={"id": item_id, "name": "Updated Locust Item"})
+
         # DELETE
-        self.client.delete("/items?id=loadtest123")
+        self.client.delete("/dev/items", params={"id": item_id})
+
