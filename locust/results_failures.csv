@@ -1,4 +1,2 @@
-Method,Name,Error,Occurrences
-POST,/predict,CatchResponseError('Invalid payload not handled: 404'),376
-POST,/predict,CatchResponseError('Unexpected status 404'),1083
-GET,/health,CatchResponseError('Health check failed: 404'),403
+Method,Name,Error,Occurrences
+GET,/dev/this-does-not-exist,HTTPError('404 Client Error: Not Found for url: /dev/this-does-not-exist'),71
