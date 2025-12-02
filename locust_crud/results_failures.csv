@@ -1,6 +1,1 @@
 Method,Name,Error,Occurrences
-GET,/this-does-not-exist,HTTPError('404 Client Error: Not Found for url: /this-does-not-exist'),468
-GET,/items?id=loadtest123,HTTPError('404 Client Error: Not Found for url: /items?id=loadtest123'),439
-DELETE,/items?id=loadtest123,HTTPError('404 Client Error: Not Found for url: /items?id=loadtest123'),439
-PUT,/items,HTTPError('404 Client Error: Not Found for url: /items'),439
-POST,/items,HTTPError('404 Client Error: Not Found for url: /items'),440
