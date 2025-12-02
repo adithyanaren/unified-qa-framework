@@ -1,3 +1,2 @@
 Method,Name,Error,Occurrences
-POST,/dev/predict,CatchResponseError('Invalid payload not handled: 500'),83
-POST,/dev/predict,CatchResponseError('Invalid payload not handled: 200'),271
+GET,/dev/dev/health,CatchResponseError('Health check failed: 404'),403
