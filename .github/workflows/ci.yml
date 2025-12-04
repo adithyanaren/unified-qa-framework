@@ -12,6 +12,8 @@ permissions:
 env:
   QA_MODE: "adaptive"
   AWS_REGION: "us-east-1"
+
+  # Prometheus & Pushgateway
   PUSHGATEWAY_URL: "http://54.224.224.239:9091"
   PROMETHEUS_URL: "http://54.224.224.239:9090"
 
@@ -21,24 +23,18 @@ env:
 
   # API Endpoints
   ML_API_URL: "https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev"
-  CRUD_API_URL: "https://hp0emdwj90.execute-api.us-east-1.amazonaws.com"
+  CRUD_API_URL: "https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev"
 
   AWS_ACCOUNT_ID: "976193248434"
   ECR_URI: "976193248434.dkr.ecr.us-east-1.amazonaws.com/qa-ml-inference"
+
 
 jobs:
   qa-pipeline:
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
-    services:
-      pushgateway:
-        image: prom/pushgateway:latest
-        ports:
-          - 9091:9091
-
     steps:
-
     # -------------------------------------
     # SETUP
     # -------------------------------------
@@ -67,9 +63,42 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
+
+    # -------------------------------------
+    # 🔥 UNIVERSAL ML WARM-UP (CALLS /predict)
+    # -------------------------------------
+    - name: Warm-Up ML Lambda (Global Start)
+      run: |
+        echo "Warming ML Lambda..."
+        for i in {1..5}; do
+          curl -s -o /dev/null -w "ML warm-up $i: %{time_total}\n" \
+          -X POST "${{ env.ML_API_URL }}/predict" \
+          -H "Content-Type: application/json" \
+          -d '{"Chest_Pain":0,"Shortness_of_Breath":0,"Fatigue":0,"Palpitations":0,
+               "Dizziness":0,"Swelling":0,"Pain_Arms_Jaw_Back":0,"Cold_Sweats_Nausea":0,
+               "High_BP":0,"High_Cholesterol":0,"Diabetes":0,"Smoking":0,"Obesity":0,
+               "Sedentary_Lifestyle":0,"Family_History":0,"Chronic_Stress":0,
+               "Gender":1,"Age":50}'
+        done
+
+
     # -------------------------------------
     # PYTEST (ML)
     # -------------------------------------
+    - name: Warm-Up Before ML PyTest
+      run: |
+        echo "Warming ML before PyTest..."
+        for i in {1..5}; do
+          curl -s -o /dev/null -w "ML warm-up pytest $i: %{time_total}\n" \
+          -X POST "${{ env.ML_API_URL }}/predict" \
+          -H "Content-Type: application/json" \
+          -d '{"Chest_Pain":0,"Shortness_of_Breath":0,"Fatigue":0,"Palpitations":0,
+               "Dizziness":0,"Swelling":0,"Pain_Arms_Jaw_Back":0,"Cold_Sweats_Nausea":0,
+               "High_BP":0,"High_Cholesterol":0,"Diabetes":0,"Smoking":0,"Obesity":0,
+               "Sedentary_Lifestyle":0,"Family_History":0,"Chronic_Stress":0,
+               "Gender":1,"Age":50}'
+        done
+
     - name: Run PyTest (ML Tests)
       continue-on-error: true
       run: |
@@ -78,6 +107,7 @@ jobs:
                src/tests/pytest/test_ml_api_functional.py \
                -v --disable-warnings \
                --junitxml=reports/ml_pytest/results.xml
+
 
     # -------------------------------------
     # PYTEST (CRUD)
@@ -90,14 +120,30 @@ jobs:
                -v --disable-warnings \
                --junitxml=reports/crud_pytest/results.xml
 
+
     # -------------------------------------
     # ROBOT (ML)
     # -------------------------------------
+    - name: Warm-Up Before ML Robot Tests
+      run: |
+        echo "Warming ML before Robot..."
+        for i in {1..5}; do
+          curl -s -o /dev/null -w "ML warm-up robot $i: %{time_total}\n" \
+          -X POST "${{ env.ML_API_URL }}/predict" \
+          -H "Content-Type: application/json" \
+          -d '{"Chest_Pain":0,"Shortness_of_Breath":0,"Fatigue":0,"Palpitations":0,
+               "Dizziness":0,"Swelling":0,"Pain_Arms_Jaw_Back":0,"Cold_Sweats_Nausea":0,
+               "High_BP":0,"High_Cholesterol":0,"Diabetes":0,"Smoking":0,"Obesity":0,
+               "Sedentary_Lifestyle":0,"Family_History":0,"Chronic_Stress":0,
+               "Gender":1,"Age":50}'
+        done
+
     - name: Run Robot Framework (ML Inference)
       continue-on-error: true
       run: |
         mkdir -p reports/robot_ml
         robot -d reports/robot_ml src/tests/Robot/ml_inference_tests.robot
+
 
     # -------------------------------------
     # ROBOT (CRUD)
@@ -108,9 +154,24 @@ jobs:
         mkdir -p reports/robot_crud
         robot -d reports/robot_crud src/tests/Robot/api_tests.robot
 
+
     # -------------------------------------
     # LOCUST ML
     # -------------------------------------
+    - name: Warm-Up Before Locust ML
+      run: |
+        echo "Warming ML before Locust..."
+        for i in {1..5}; do
+          curl -s -o /dev/null -w "ML warm-up locust $i: %{time_total}\n" \
+          -X POST "${{ env.ML_API_URL }}/predict" \
+          -H "Content-Type: application/json" \
+          -d '{"Chest_Pain":0,"Shortness_of_Breath":0,"Fatigue":0,"Palpitations":0,
+               "Dizziness":0,"Swelling":0,"Pain_Arms_Jaw_Back":0,"Cold_Sweats_Nausea":0,
+               "High_BP":0,"High_Cholesterol":0,"Diabetes":0,"Smoking":0,"Obesity":0,
+               "Sedentary_Lifestyle":0,"Family_History":0,"Chronic_Stress":0,
+               "Gender":1,"Age":50}'
+        done
+
     - name: Run Locust ML Load Test
       continue-on-error: true
       run: |
@@ -121,6 +182,7 @@ jobs:
           --host ${{ env.ML_API_URL }} \
           --csv reports/locust_ml/results \
           --only-summary || true
+
 
     # -------------------------------------
     # LOCUST CRUD
@@ -136,15 +198,6 @@ jobs:
           --csv reports/locust_crud/results \
           --only-summary || true
 
-    # -------------------------------------
-    # ⚠️ REMOVED: HEALTH CHECKS (BROKEN)
-    # -------------------------------------
-    #       ❌ Health Check ML Lambda
-    #       ❌ Health Check CRUD Lambda
-    # These were removed because:
-    # → Incorrect invoke format
-    # → Caused base64 JSON errors
-    # → Not needed at all
 
     # -------------------------------------
     # CLOUDWATCH → PROMETHEUS (ML)
@@ -153,7 +206,42 @@ jobs:
       continue-on-error: true
       run: |
         echo "Fetching ML metrics…"
-        # Your original ML CloudWatch metric block untouched
+
+        aws cloudwatch get-metric-statistics \
+          --namespace "QAFrameworkML" \
+          --metric-name InferenceCount \
+          --dimensions Name=FunctionName,Value=$ML_LAMBDA_NAME Name=Stage,Value=dev \
+          --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+          --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+          --period 60 --statistics Sum > ml_inference.json
+
+        aws cloudwatch get-metric-statistics \
+          --namespace "QAFrameworkML" \
+          --metric-name InferenceLatency \
+          --dimensions Name=FunctionName,Value=$ML_LAMBDA_NAME Name=Stage,Value=dev \
+          --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+          --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+          --period 60 --statistics Average > ml_latency.json
+
+        aws cloudwatch get-metric-statistics \
+          --namespace "QAFrameworkML" \
+          --metric-name ModelColdStartCount \
+          --dimensions Name=FunctionName,Value=$ML_LAMBDA_NAME Name=Stage,Value=dev \
+          --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+          --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+          --period 60 --statistics Sum > ml_cold.json
+
+        INF=$(jq '[.Datapoints[].Sum] | add // 0' ml_inference.json)
+        LAT=$(jq '[.Datapoints[].Average] | add // 0' ml_latency.json)
+        COLD=$(jq '[.Datapoints[].Sum] | add // 0' ml_cold.json)
+
+        echo "ml_inference_count $INF" > ml_metrics.prom
+        echo "ml_inference_latency_ms $LAT" >> ml_metrics.prom
+        echo "ml_model_cold_start_count $COLD" >> ml_metrics.prom
+
+        curl --data-binary "@ml_metrics.prom" \
+          ${{ env.PUSHGATEWAY_URL }}/metrics/job/ml_lambda/instance/github-actions || true
+
 
     # -------------------------------------
     # CLOUDWATCH → PROMETHEUS (CRUD)
@@ -188,21 +276,20 @@ jobs:
         curl --data-binary "@crud_metrics.prom" \
           ${{ env.PUSHGATEWAY_URL }}/metrics/job/crud_lambda/instance/github-actions || true
 
+
     # -------------------------------------
-    # ADAPTIVE CONTROLLER ML
+    # ADAPTIVE CONTROLLER (ML + CRUD)
     # -------------------------------------
     - name: Adaptive QA (ML Lambda)
       continue-on-error: true
       run: |
-        python adaptive_controller.py --lambda $ML_LAMBDA_NAME
+        python adaptive_controller.py
 
-    # -------------------------------------
-    # ADAPTIVE CONTROLLER CRUD
-    # -------------------------------------
     - name: Adaptive QA (CRUD Lambda)
       continue-on-error: true
       run: |
-        python adaptive_controller.py --lambda $CRUD_LAMBDA_NAME
+        python adaptive_controller.py
+
 
     # -------------------------------------
     # PROMOTE ML
@@ -221,6 +308,7 @@ jobs:
       run: |
         VERSION=$(aws lambda publish-version --function-name $CRUD_LAMBDA_NAME --query Version --output text)
         aws lambda update-alias --function-name $CRUD_LAMBDA_NAME --name live --function-version $VERSION
+
 
     # -------------------------------------
     # GRAFANA DASHBOARD
