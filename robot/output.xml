@@ -1,76 +1,3256 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot generator="Robot 7.3.2 (Python 3.11.9 on win32)" generated="2025-09-11T14:29:25.816086" rpa="false" schemaversion="5">
-<suite id="s1" name="Api Tests" source="C:\Users\adith\PycharmProjects\QAFramework-Research\src\tests\Robot\api_tests.robot">
-<test id="s1-t1" name="Verify Lambda CRUD API Health" line="7">
-<kw name="Create Session" owner="RequestsLibrary">
-<msg time="2025-09-11T14:29:26.154433" level="INFO">Creating Session using : alias=mysession, url=https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev, headers={},                     cookies={}, auth=None, timeout=None, proxies=None, verify=False,                     debug=0 </msg>
-<arg>mysession</arg>
-<arg>${API_URL}</arg>
+<robot generator="Robot 7.3.2 (Python 3.11.14 on linux)" generated="2025-12-04T12:29:42.366725" rpa="false" schemaversion="5">
+<suite id="s1" name="Ml Inference Tests" source="/home/runner/work/unified-qa-framework/unified-qa-framework/src/tests/Robot/ml_inference_tests.robot">
+<kw name="Create Session" owner="RequestsLibrary" type="SETUP">
+<msg time="2025-12-04T12:29:42.490537" level="INFO">Creating Session using : alias=mlapi, url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev, headers={},                     cookies={}, auth=None, timeout=None, proxies=None, verify=False,                     debug=0 </msg>
+<arg>mlapi</arg>
+<arg>https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev</arg>
+<arg>verify=False</arg>
 <doc>Create Session: create a HTTP session to a server</doc>
-<status status="PASS" start="2025-09-11T14:29:26.154433" elapsed="0.000000"/>
+<status status="PASS" start="2025-12-04T12:29:42.490289" elapsed="0.000413"/>
 </kw>
+<test id="s1-t1" name="1. Verify Health Endpoint" line="70">
+<kw name="Safe GET JSON">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
 <kw name="GET On Session" owner="RequestsLibrary">
-<msg time="2025-09-11T14:29:26.800958" level="INFO">GET Request : url=https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/ 
- path_url=/dev/ 
+<msg time="2025-12-04T12:29:42.692214" level="INFO">GET Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/health 
+ path_url=/dev/health 
  headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive'} 
  body=None 
  </msg>
-<msg time="2025-09-11T14:29:26.800958" level="INFO">GET Response : url=https://hp0emdwj90.execute-api.us-east-1.amazonaws.com/dev/ 
+<msg time="2025-12-04T12:29:42.692359" level="INFO">GET Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/health 
  status=200, reason=OK 
- headers={'Date': 'Thu, 11 Sep 2025 13:29:26 GMT', 'Content-Type': 'application/json', 'Content-Length': '42', 'Connection': 'keep-alive', 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET,POST,PUT,DELETE,OPTIONS', 'access-control-allow-headers': 'Content-Type,Authorization', 'Apigw-Requestid': 'QvU8mgAzIAMEPBQ='} 
- body={"message": "Hello from Lambda CRUD API!"} 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:42 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '71', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8mhz3IAMEM1g='} 
+ body={"status": "ok", "message": "QA Framework ML Inference API is healthy"} 
  </msg>
-<msg time="2025-09-11T14:29:26.800958" level="INFO">C:\Users\adith\PycharmProjects\QAFramework-Research\.venv\Lib\site-packages\urllib3\connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'hp0emdwj90.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+<msg time="2025-12-04T12:29:42.692421" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
   warnings.warn(</msg>
-<msg time="2025-09-11T14:29:26.802974" level="INFO">${response} = &lt;Response [200]&gt;</msg>
-<var>${response}</var>
-<arg>mysession</arg>
-<arg>/</arg>
+<arg>mlapi</arg>
+<arg>${url}</arg>
 <doc>Sends a GET request on a previously created HTTP Session.</doc>
-<status status="PASS" start="2025-09-11T14:29:26.154433" elapsed="0.648541"/>
+<status status="PASS" start="2025-12-04T12:29:42.491656" elapsed="0.200827"/>
 </kw>
-<kw name="Should Be Equal As Integers" owner="BuiltIn">
-<msg time="2025-09-11T14:29:26.804977" level="INFO">Argument types are:
-&lt;class 'int'&gt;
-&lt;class 'str'&gt;</msg>
-<arg>${response.status_code}</arg>
-<arg>200</arg>
-<doc>Fails if objects are unequal after converting them to integers.</doc>
-<status status="PASS" start="2025-09-11T14:29:26.803961" elapsed="0.001016"/>
+<msg time="2025-12-04T12:29:42.692615" level="INFO">${result} = ('PASS', &lt;Response [200]&gt;)</msg>
+<var>${result}</var>
+<arg>GET On Session</arg>
+<arg>mlapi</arg>
+<arg>${url}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.491517" elapsed="0.201129"/>
 </kw>
 <kw name="Set Variable" owner="BuiltIn">
-<msg time="2025-09-11T14:29:26.807701" level="INFO">${json} = {'message': 'Hello from Lambda CRUD API!'}</msg>
-<var>${json}</var>
-<arg>${response.json()}</arg>
+<msg time="2025-12-04T12:29:42.693402" level="INFO">${ok} = PASS</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
 <doc>Returns the given values which can then be assigned to a variables.</doc>
-<status status="PASS" start="2025-09-11T14:29:26.806615" elapsed="0.001086"/>
+<status status="PASS" start="2025-12-04T12:29:42.692798" elapsed="0.000628"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.693992" level="INFO">${resp} = &lt;Response [200]&gt;</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.693530" elapsed="0.000492"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.694573" level="INFO">${text} = {"status": "ok", "message": "QA Framework ML Inference API is healthy"}</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.694130" elapsed="0.000468"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.695119" level="FAIL">Evaluating expression '__import__(\'json\').loads(str({"status": "ok", "message": "QA Framework ML Inference API is healthy"}))' failed: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)</msg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="FAIL" start="2025-12-04T12:29:42.694836" elapsed="0.000451">Evaluating expression '__import__(\'json\').loads(str({"status": "ok", "message": "QA Framework ML Inference API is healthy"}))' failed: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)</status>
+</kw>
+<msg time="2025-12-04T12:29:42.695379" level="INFO">${parsed} = ('FAIL', 'Evaluating expression \'__import__(\\\'json\\\').loads(str({"status": "ok", "message": "QA Framework ML Inference API is healthy"}))\' failed: JSONDecodeError: Expecting property name enclos...</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.694706" elapsed="0.000698"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.695931" level="INFO">${parse_ok} = FAIL</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.695508" elapsed="0.000445"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.696374" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.696062" elapsed="0.000334"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.696663" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.696483" elapsed="0.000201"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.696785" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:42.696766" elapsed="0.000189"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.697322" level="INFO">${status} = unknown</msg>
+<var>${status}</var>
+<arg>${data}.get("status", "unknown") if isinstance(${data}, dict) else "unknown"</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.697085" elapsed="0.000259"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.697646" level="INFO">${safe_json} = {'status': 'unknown'}</msg>
+<var>${safe_json}</var>
+<arg>status=${status}</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.697428" elapsed="0.000240"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Health JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.697748" elapsed="0.000138"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:42.697942" elapsed="0.000052"/>
+</return>
+<msg time="2025-12-04T12:29:42.698165" level="INFO">${json} = {'status': 'unknown'}</msg>
+<var>${json}</var>
+<arg>${HEALTH}</arg>
+<status status="PASS" start="2025-12-04T12:29:42.491225" elapsed="0.206969"/>
 </kw>
 <kw name="Dictionary Should Contain Key" owner="Collections">
 <arg>${json}</arg>
-<arg>message</arg>
+<arg>status</arg>
 <doc>Fails if ``key`` is not found from ``dictionary``.</doc>
-<status status="PASS" start="2025-09-11T14:29:26.807701" elapsed="0.000000"/>
+<status status="PASS" start="2025-12-04T12:29:42.698292" elapsed="0.000127"/>
 </kw>
-<kw name="Should Be Equal" owner="BuiltIn">
-<arg>${json["message"]}</arg>
-<arg>Hello from Lambda CRUD API!</arg>
-<doc>Fails if the given objects are unequal.</doc>
-<status status="PASS" start="2025-09-11T14:29:26.808783" elapsed="0.001041"/>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.698620" level="INFO">✅ Health endpoint reachable.</msg>
+<arg>✅ Health endpoint reachable.</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.698534" elapsed="0.000123"/>
 </kw>
-<status status="PASS" start="2025-09-11T14:29:26.149276" elapsed="0.660548"/>
+<status status="PASS" start="2025-12-04T12:29:42.490807" elapsed="0.207937"/>
 </test>
-<status status="PASS" start="2025-09-11T14:29:25.823975" elapsed="0.987984"/>
+<test id="s1-t2" name="2. Predict With Valid Payload" line="75">
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:42.771718" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '163', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":63,\\"sex\\":1,\\"cp\\":3,\\"trestbps\\":145,\\"chol\\":233,\\"fbs\\":1,\\"restecg\\":0,\\"thalach\\":150,\\"exang\\":0,\\"oldpeak\\":2.3,\\"slope\\":0,\\"ca\\":0,\\"thal\\":1}"' 
+ </msg>
+<msg time="2025-12-04T12:29:42.771789" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:42 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8nideIAMEMTg='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:42.771856" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:42.771987" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:42.699673" elapsed="0.073281">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:42.773051" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.699567" elapsed="0.073506"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.773601" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.773169" elapsed="0.000454"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.773866" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.773715" elapsed="0.000172"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.774112" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.773972" elapsed="0.000160"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.774333" elapsed="0.000157"/>
+</kw>
+<msg time="2025-12-04T12:29:42.774555" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.774214" elapsed="0.000360"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.775036" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.774650" elapsed="0.000407"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.775591" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.775139" elapsed="0.000473"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.775856" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.775694" elapsed="0.000182"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.775971" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:42.775953" elapsed="0.000171"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.776417" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.776269" elapsed="0.000173"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.776728" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.776518" elapsed="0.000231"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.777019" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.776826" elapsed="0.000214"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.777340" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.777117" elapsed="0.000250"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.777445" elapsed="0.000144"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.777666" elapsed="0.000130"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.777874" elapsed="0.000128"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.778112" elapsed="0.000147"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:42.778319" elapsed="0.000038"/>
+</return>
+<msg time="2025-12-04T12:29:42.778504" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${VALID_PAYLOAD}</arg>
+<status status="PASS" start="2025-12-04T12:29:42.699334" elapsed="0.079198"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.779277" level="INFO">⚠️ Default response fallback.</msg>
+<arg>⚠️ Default response fallback.</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.779178" elapsed="0.000138"/>
+</kw>
+<arg>${json['predicted_class']} != 0</arg>
+<arg>Log</arg>
+<arg>✅ Valid prediction OK.</arg>
+<arg>ELSE</arg>
+<arg>Log</arg>
+<arg>⚠️ Default response fallback.</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.778629" elapsed="0.000727"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:42.698933" elapsed="0.080510"/>
+</test>
+<test id="s1-t3" name="3. Predict With Missing Fields" line="79">
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:42.852528" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '24', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":63,\\"sex\\":1}"' 
+ </msg>
+<msg time="2025-12-04T12:29:42.852592" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:42 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8ohW1IAMEYDA='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:42.852652" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:42.852750" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:42.780342" elapsed="0.072845">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:42.853325" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.780221" elapsed="0.073141"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.853859" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.853464" elapsed="0.000416"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.854108" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.853965" elapsed="0.000163"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.854381" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.854211" elapsed="0.000191"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.854585" elapsed="0.000147"/>
+</kw>
+<msg time="2025-12-04T12:29:42.854796" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.854484" elapsed="0.000331"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.855291" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.854890" elapsed="0.000422"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.855819" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.855395" elapsed="0.000444"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.856079" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.855920" elapsed="0.000179"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.856190" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:42.856173" elapsed="0.000192"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.856603" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.856486" elapsed="0.000137"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.856907" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.856695" elapsed="0.000232"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.857198" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.857005" elapsed="0.000213"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.857542" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.857315" elapsed="0.000248"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.857638" elapsed="0.000138"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.857850" elapsed="0.000129"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.858052" elapsed="0.000125"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.858265" elapsed="0.000133"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:42.858444" elapsed="0.000040"/>
+</return>
+<msg time="2025-12-04T12:29:42.858630" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${MISSING_FIELD_PAYLOAD}</arg>
+<status status="PASS" start="2025-12-04T12:29:42.780000" elapsed="0.078657"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.858858" level="INFO">✅ Missing fields handled safely: {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<arg>✅ Missing fields handled safely: ${json}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.858752" elapsed="0.000141"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:42.779636" elapsed="0.079333"/>
+</test>
+<test id="s1-t4" name="4. Predict With Invalid Data Types" line="83">
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:42.930289" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '56', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":\\"sixty\\",\\"sex\\":\\"male\\",\\"chol\\":\\"high\\"}"' 
+ </msg>
+<msg time="2025-12-04T12:29:42.930373" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:42 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8ohJdIAMEYbQ='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:42.930438" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:42.930561" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:42.859866" elapsed="0.071107">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:42.931087" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.859761" elapsed="0.071356"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.931814" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.931231" elapsed="0.000604"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.932067" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.931922" elapsed="0.000166"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.932323" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.932170" elapsed="0.000173"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.932523" elapsed="0.000148"/>
+</kw>
+<msg time="2025-12-04T12:29:42.932736" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.932424" elapsed="0.000331"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.933211" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.932830" elapsed="0.000401"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.933747" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.933330" elapsed="0.000437"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.934005" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.933846" elapsed="0.000178"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.934117" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:42.934100" elapsed="0.000182"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.934536" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.934413" elapsed="0.000143"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.934859" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.934660" elapsed="0.000219"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.935142" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.934955" elapsed="0.000207"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.935455" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.935237" elapsed="0.000238"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.935551" elapsed="0.000135"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.935759" elapsed="0.000127"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.935957" elapsed="0.000121"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.936151" elapsed="0.000140"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:42.936341" elapsed="0.000037"/>
+</return>
+<msg time="2025-12-04T12:29:42.936533" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${INVALID_TYPE_PAYLOAD}</arg>
+<status status="PASS" start="2025-12-04T12:29:42.859535" elapsed="0.077025"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:42.936761" level="INFO">✅ Type validation handled safely: {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<arg>✅ Type validation handled safely: ${json}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.936655" elapsed="0.000142"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:42.859149" elapsed="0.077725"/>
+</test>
+<test id="s1-t5" name="5. Predict With Empty Payload" line="87">
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:43.010023" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '4', 'Content-Type': 'application/json'} 
+ body=b'"{}"' 
+ </msg>
+<msg time="2025-12-04T12:29:43.010085" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:42 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8pgMPIAMEYsg='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:43.010155" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:43.010285" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:42.937756" elapsed="0.073038">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:43.010904" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:42.937656" elapsed="0.073279"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.011480" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.011052" elapsed="0.000449"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.011728" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.011586" elapsed="0.000162"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.011963" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.011832" elapsed="0.000150"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.012157" elapsed="0.000165"/>
+</kw>
+<msg time="2025-12-04T12:29:43.012390" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.012061" elapsed="0.000348"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.012868" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.012484" elapsed="0.000404"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.013408" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.012968" elapsed="0.000461"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.013673" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.013509" elapsed="0.000184"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.013835" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:43.013799" elapsed="0.000222"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.014284" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.014151" elapsed="0.000155"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.014578" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.014381" elapsed="0.000217"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.014867" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.014673" elapsed="0.000215"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.015145" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.014964" elapsed="0.000200"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.015236" elapsed="0.000149"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.015457" elapsed="0.000124"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.015652" elapsed="0.000123"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.015850" elapsed="0.000130"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:43.016027" elapsed="0.000037"/>
+</return>
+<msg time="2025-12-04T12:29:43.016220" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${EMPTY_PAYLOAD}</arg>
+<status status="PASS" start="2025-12-04T12:29:42.937440" elapsed="0.078833"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.017389" level="INFO">✅ Empty payload handled safely: {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<arg>✅ Empty payload handled safely: ${json}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.016376" elapsed="0.001053"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:42.937047" elapsed="0.080460"/>
+</test>
+<test id="s1-t6" name="6. Predict With Large Payload" line="91">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.018123" level="INFO">${payload} = {'dummy': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...</msg>
+<var>${payload}</var>
+<arg>{"dummy":"x"*10000}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.017951" elapsed="0.000195"/>
+</kw>
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:43.111532" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '10013', 'Content-Type': 'application/json'} 
+ body=b'{"dummy": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'... (set the log level to DEBUG or TRACE to see the full content) 
+ </msg>
+<msg time="2025-12-04T12:29:43.111743" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=200, reason=OK 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:43 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '79', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8qgMZoAMEYsg='} 
+ body={"predicted_class": 0, "risk_probability": 0.003, "inference_latency_ms": 1.53} 
+ </msg>
+<msg time="2025-12-04T12:29:43.111834" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.018640" elapsed="0.093278"/>
+</kw>
+<msg time="2025-12-04T12:29:43.112059" level="INFO">${result} = ('PASS', &lt;Response [200]&gt;)</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.018541" elapsed="0.093554"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.112856" level="INFO">${ok} = PASS</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.112291" elapsed="0.000596"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.113462" level="INFO">${resp} = &lt;Response [200]&gt;</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.112982" elapsed="0.000503"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.114065" level="INFO">${text} = {"predicted_class": 0, "risk_probability": 0.003, "inference_latency_ms": 1.53}</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.113600" elapsed="0.000487"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.114583" level="FAIL">Evaluating expression '__import__(\'json\').loads(str({"predicted_class": 0, "risk_probability": 0.003, "inference_latency_ms": 1.53}))' failed: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)</msg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="FAIL" start="2025-12-04T12:29:43.114329" elapsed="0.000392">Evaluating expression '__import__(\'json\').loads(str({"predicted_class": 0, "risk_probability": 0.003, "inference_latency_ms": 1.53}))' failed: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)</status>
+</kw>
+<msg time="2025-12-04T12:29:43.114827" level="INFO">${parsed} = ('FAIL', 'Evaluating expression \'__import__(\\\'json\\\').loads(str({"predicted_class": 0, "risk_probability": 0.003, "inference_latency_ms": 1.53}))\' failed: JSONDecodeError: Expecting property nam...</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.114189" elapsed="0.000661"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.115387" level="INFO">${parse_ok} = FAIL</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.114933" elapsed="0.000488"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.115741" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.115541" elapsed="0.000234"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.116100" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.115891" elapsed="0.000233"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.116284" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:43.116235" elapsed="0.000234"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.116739" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.116595" elapsed="0.000164"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.117054" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.116836" elapsed="0.000240"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.117457" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.117178" elapsed="0.000312"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.117854" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.117585" elapsed="0.000291"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.117956" elapsed="0.000139"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.118173" elapsed="0.000196"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.118448" elapsed="0.000131"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.118654" elapsed="0.000136"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:43.118847" elapsed="0.000046"/>
+</return>
+<msg time="2025-12-04T12:29:43.119030" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${payload}</arg>
+<status status="PASS" start="2025-12-04T12:29:43.018331" elapsed="0.100721"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.119263" level="INFO">✅ Large payload handled safely.</msg>
+<arg>✅ Large payload handled safely.</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.119162" elapsed="0.000152"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:43.017680" elapsed="0.101725"/>
+</test>
+<test id="s1-t7" name="7. Validate Response Schema" line="96">
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:43.195160" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '163', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":63,\\"sex\\":1,\\"cp\\":3,\\"trestbps\\":145,\\"chol\\":233,\\"fbs\\":1,\\"restecg\\":0,\\"thalach\\":150,\\"exang\\":0,\\"oldpeak\\":2.3,\\"slope\\":0,\\"ca\\":0,\\"thal\\":1}"' 
+ </msg>
+<msg time="2025-12-04T12:29:43.195210" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:43 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8rj8woAMEYdQ='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:43.195301" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:43.195404" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:43.120347" elapsed="0.075494">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:43.195957" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.120206" elapsed="0.075782"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.206868" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.196082" elapsed="0.010813"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.207162" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.206997" elapsed="0.000188"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.207453" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.207305" elapsed="0.000170"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.207667" elapsed="0.000155"/>
+</kw>
+<msg time="2025-12-04T12:29:43.207891" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.207563" elapsed="0.000348"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.208414" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.207990" elapsed="0.000446"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.208953" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.208522" elapsed="0.000452"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.209224" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.209059" elapsed="0.000209"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.209372" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:43.209353" elapsed="0.000183"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.209778" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.209657" elapsed="0.000142"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.210112" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.209874" elapsed="0.000261"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.210466" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.210230" elapsed="0.000258"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.210774" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.210568" elapsed="0.000229"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.210875" elapsed="0.000139"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.211090" elapsed="0.000127"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.211328" elapsed="0.000135"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.211577" elapsed="0.000133"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:43.211768" elapsed="0.000038"/>
+</return>
+<msg time="2025-12-04T12:29:43.211959" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${VALID_PAYLOAD}</arg>
+<status status="PASS" start="2025-12-04T12:29:43.119986" elapsed="0.092000"/>
+</kw>
+<kw name="Dictionary Should Contain Key" owner="Collections">
+<arg>${json}</arg>
+<arg>risk_probability</arg>
+<doc>Fails if ``key`` is not found from ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.212074" elapsed="0.000114"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.212376" level="INFO">✅ Schema OK.</msg>
+<arg>✅ Schema OK.</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.212302" elapsed="0.000109"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:43.119585" elapsed="0.092907"/>
+</test>
+<test id="s1-t8" name="8. Repeated Predictions Consistency" line="101">
+<kw name="Create List" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.213046" level="INFO">${vals} = []</msg>
+<var>${vals}</var>
+<doc>Returns a list containing given items.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.212951" elapsed="0.000117"/>
+</kw>
+<for flavor="IN RANGE">
+<iter>
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:43.285021" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '163', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":63,\\"sex\\":1,\\"cp\\":3,\\"trestbps\\":145,\\"chol\\":233,\\"fbs\\":1,\\"restecg\\":0,\\"thalach\\":150,\\"exang\\":0,\\"oldpeak\\":2.3,\\"slope\\":0,\\"ca\\":0,\\"thal\\":1}"' 
+ </msg>
+<msg time="2025-12-04T12:29:43.285073" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:43 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8shk0IAMEMtA='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:43.285134" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:43.285237" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:43.213776" elapsed="0.071884">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:43.285776" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.213674" elapsed="0.072130"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.286471" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.285908" elapsed="0.000586"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.286732" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.286584" elapsed="0.000169"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.286978" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.286841" elapsed="0.000157"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.287181" elapsed="0.000168"/>
+</kw>
+<msg time="2025-12-04T12:29:43.287416" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.287081" elapsed="0.000355"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.287897" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.287516" elapsed="0.000402"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.288441" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.288000" elapsed="0.000462"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.288706" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.288543" elapsed="0.000189"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.288829" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:43.288810" elapsed="0.000181"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.289229" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.289112" elapsed="0.000154"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.289548" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.289343" elapsed="0.000225"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.289836" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.289646" elapsed="0.000240"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.290162" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.289969" elapsed="0.000214"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.290275" elapsed="0.000138"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.290488" elapsed="0.000127"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.290688" elapsed="0.000125"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.290887" elapsed="0.000137"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:43.291080" elapsed="0.000040"/>
+</return>
+<msg time="2025-12-04T12:29:43.291287" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${VALID_PAYLOAD}</arg>
+<status status="PASS" start="2025-12-04T12:29:43.213441" elapsed="0.077877"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.291746" level="INFO">${pc} = 0</msg>
+<var>${pc}</var>
+<arg>${json['predicted_class']}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.291404" elapsed="0.000362"/>
+</kw>
+<kw name="Append To List" owner="Collections">
+<arg>${vals}</arg>
+<arg>${pc}</arg>
+<doc>Adds ``values`` to the end of ``list``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.291840" elapsed="0.000112"/>
+</kw>
+<var name="${i}">0</var>
+<status status="PASS" start="2025-12-04T12:29:43.213267" elapsed="0.078713"/>
+</iter>
+<iter>
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:43.428972" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '163', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":63,\\"sex\\":1,\\"cp\\":3,\\"trestbps\\":145,\\"chol\\":233,\\"fbs\\":1,\\"restecg\\":0,\\"thalach\\":150,\\"exang\\":0,\\"oldpeak\\":2.3,\\"slope\\":0,\\"ca\\":0,\\"thal\\":1}"' 
+ </msg>
+<msg time="2025-12-04T12:29:43.429054" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:43 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8tjkjoAMEMGg='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:43.429150" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:43.429325" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:43.292573" elapsed="0.137223">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:43.429939" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.292472" elapsed="0.137491"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.430547" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.430080" elapsed="0.000489"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.430820" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.430667" elapsed="0.000174"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.431058" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.430926" elapsed="0.000156"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.431289" elapsed="0.000163"/>
+</kw>
+<msg time="2025-12-04T12:29:43.431520" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.431168" elapsed="0.000371"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.432005" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.431614" elapsed="0.000411"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.432538" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.432106" elapsed="0.000453"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.432806" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.432642" elapsed="0.000185"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.432921" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:43.432903" elapsed="0.000176"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.433357" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.433206" elapsed="0.000172"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.433663" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.433454" elapsed="0.000229"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.433952" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.433761" elapsed="0.000211"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.434234" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.434048" elapsed="0.000230"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.434360" elapsed="0.000139"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.434574" elapsed="0.000130"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.434777" elapsed="0.000122"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.434977" elapsed="0.000321"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:43.435356" elapsed="0.000041"/>
+</return>
+<msg time="2025-12-04T12:29:43.435538" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${VALID_PAYLOAD}</arg>
+<status status="PASS" start="2025-12-04T12:29:43.292229" elapsed="0.143331"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.435984" level="INFO">${pc} = 0</msg>
+<var>${pc}</var>
+<arg>${json['predicted_class']}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.435639" elapsed="0.000366"/>
+</kw>
+<kw name="Append To List" owner="Collections">
+<arg>${vals}</arg>
+<arg>${pc}</arg>
+<doc>Adds ``values`` to the end of ``list``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.436080" elapsed="0.000112"/>
+</kw>
+<var name="${i}">1</var>
+<status status="PASS" start="2025-12-04T12:29:43.292071" elapsed="0.144150"/>
+</iter>
+<iter>
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:43.516806" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '163', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":63,\\"sex\\":1,\\"cp\\":3,\\"trestbps\\":145,\\"chol\\":233,\\"fbs\\":1,\\"restecg\\":0,\\"thalach\\":150,\\"exang\\":0,\\"oldpeak\\":2.3,\\"slope\\":0,\\"ca\\":0,\\"thal\\":1}"' 
+ </msg>
+<msg time="2025-12-04T12:29:43.516868" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:43 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8uhiJoAMEYSw='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:43.516938" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:43.517042" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:43.436813" elapsed="0.080623">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:43.517553" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.436716" elapsed="0.080865"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.518077" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.517691" elapsed="0.000407"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.518360" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.518183" elapsed="0.000198"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.518597" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.518464" elapsed="0.000152"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.518793" elapsed="0.000146"/>
+</kw>
+<msg time="2025-12-04T12:29:43.519001" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.518697" elapsed="0.000323"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.519496" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.519095" elapsed="0.000420"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.520053" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.519629" elapsed="0.000445"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.520340" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.520155" elapsed="0.000206"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.520458" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:43.520440" elapsed="0.000141"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.520775" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.520667" elapsed="0.000128"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.521060" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.520868" elapsed="0.000211"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.521365" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.521154" elapsed="0.000235"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.521644" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.521464" elapsed="0.000201"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.521737" elapsed="0.000129"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.521937" elapsed="0.000185"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.522218" elapsed="0.000160"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.522457" elapsed="0.000125"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:43.522636" elapsed="0.000035"/>
+</return>
+<msg time="2025-12-04T12:29:43.522808" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${VALID_PAYLOAD}</arg>
+<status status="PASS" start="2025-12-04T12:29:43.436501" elapsed="0.086335"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.523299" level="INFO">${pc} = 0</msg>
+<var>${pc}</var>
+<arg>${json['predicted_class']}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.522916" elapsed="0.000404"/>
+</kw>
+<kw name="Append To List" owner="Collections">
+<arg>${vals}</arg>
+<arg>${pc}</arg>
+<doc>Adds ``values`` to the end of ``list``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.523393" elapsed="0.000109"/>
+</kw>
+<var name="${i}">2</var>
+<status status="PASS" start="2025-12-04T12:29:43.436342" elapsed="0.087187"/>
+</iter>
+<var>${i}</var>
+<value>3</value>
+<status status="PASS" start="2025-12-04T12:29:43.213116" elapsed="0.310440"/>
+</for>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.523741" level="INFO">✅ Repeated predictions collected: [0, 0, 0]</msg>
+<arg>✅ Repeated predictions collected: ${vals}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.523639" elapsed="0.000136"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:43.212680" elapsed="0.311184"/>
+</test>
+<test id="s1-t9" name="9. Missing Content-Type Header" line="110">
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.524490" level="INFO">${hdr} = {'Content-Type': ''}</msg>
+<var>${hdr}</var>
+<arg>Content-Type=</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.524357" elapsed="0.000153"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:43.597585" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Type': '', 'Content-Length': '7'} 
+ body={"a":1} 
+ </msg>
+<msg time="2025-12-04T12:29:43.597635" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:43 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '54', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8viHiIAMEMpA='} 
+ body={"error": "Expecting value: line 1 column 1 (char 0)"} 
+ </msg>
+<msg time="2025-12-04T12:29:43.597684" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:43.597781" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>headers=${hdr}</arg>
+<arg>data={"a":1}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:43.524691" elapsed="0.073479">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:43.598322" level="INFO">${r} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${r}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>headers=${hdr}</arg>
+<arg>data={"a":1}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.524590" elapsed="0.073763"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.598758" level="INFO">✅ Missing header safely handled.</msg>
+<arg>✅ Missing header safely handled.</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.598476" elapsed="0.000354"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:43.524057" elapsed="0.074862"/>
+</test>
+<test id="s1-t10" name="10. Invalid Method Request" line="115">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="GET On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:43.650062" level="INFO">GET Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive'} 
+ body=None 
+ </msg>
+<msg time="2025-12-04T12:29:43.650107" level="INFO">GET Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=404, reason=Not Found 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:43 GMT', 'Content-Type': 'application/json', 'Content-Length': '23', 'Connection': 'keep-alive', 'apigw-requestid': 'VEC8whRNIAMEYew='} 
+ body={"message":"Not Found"} 
+ </msg>
+<msg time="2025-12-04T12:29:43.650157" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:43.650264" level="FAIL">HTTPError: 404 Client Error: Not Found for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<doc>Sends a GET request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:43.599517" elapsed="0.051128">HTTPError: 404 Client Error: Not Found for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:43.650750" level="INFO">${r} = ('FAIL', 'HTTPError: 404 Client Error: Not Found for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${r}</var>
+<arg>GET On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.599406" elapsed="0.051373"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.650983" level="INFO">✅ GET method safely handled.</msg>
+<arg>✅ GET method safely handled.</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.650896" elapsed="0.000124"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:43.599098" elapsed="0.052000"/>
+</test>
+<test id="s1-t11" name="11. Boundary Case - Minimum Values" line="119">
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:43.720904" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '41', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":0,\\"chol\\":50,\\"trestbps\\":50}"' 
+ </msg>
+<msg time="2025-12-04T12:29:43.720966" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:43 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8wg2zoAMEYUQ='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:43.721026" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:43.721123" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:43.651971" elapsed="0.069548">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:43.721629" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.651869" elapsed="0.069789"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.722171" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.721766" elapsed="0.000427"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.722467" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.722313" elapsed="0.000175"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.722706" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.722573" elapsed="0.000153"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.722910" elapsed="0.000151"/>
+</kw>
+<msg time="2025-12-04T12:29:43.723127" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.722810" elapsed="0.000336"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.723618" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.723222" elapsed="0.000417"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.724147" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.723720" elapsed="0.000448"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.724434" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.724264" elapsed="0.000191"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.724549" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:43.724532" elapsed="0.000212"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.725003" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.724871" elapsed="0.000153"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.725317" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.725098" elapsed="0.000241"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.725610" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.725416" elapsed="0.000215"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.725888" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.725706" elapsed="0.000203"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.725981" elapsed="0.000131"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.726185" elapsed="0.000143"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.726402" elapsed="0.000123"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.726600" elapsed="0.000130"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:43.726785" elapsed="0.000041"/>
+</return>
+<msg time="2025-12-04T12:29:43.726965" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>{"age":0,"chol":50,"trestbps":50}</arg>
+<status status="PASS" start="2025-12-04T12:29:43.651671" elapsed="0.075322"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.727178" level="INFO">✅ Min boundary tested: {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<arg>✅ Min boundary tested: ${json}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.727076" elapsed="0.000137"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:43.651279" elapsed="0.076026"/>
+</test>
+<test id="s1-t12" name="12. Boundary Case - Maximum Values" line="123">
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:43.797299" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '45', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":120,\\"chol\\":600,\\"trestbps\\":300}"' 
+ </msg>
+<msg time="2025-12-04T12:29:43.797357" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:43 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8xhk_IAMEYBw='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:43.797423" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:43.797515" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:43.728309" elapsed="0.069564">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:43.797986" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.728188" elapsed="0.069829"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.798668" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.798127" elapsed="0.000569"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.798988" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.798808" elapsed="0.000206"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.799322" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.799127" elapsed="0.000221"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.799586" elapsed="0.000185"/>
+</kw>
+<msg time="2025-12-04T12:29:43.799857" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.799458" elapsed="0.000427"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.800518" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.799982" elapsed="0.000562"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.801292" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.800651" elapsed="0.000669"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.801639" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.801430" elapsed="0.000235"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.801796" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:43.801773" elapsed="0.000180"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.802200" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.802066" elapsed="0.000158"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.802596" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.802345" elapsed="0.000276"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.802960" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.802726" elapsed="0.000259"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.803347" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.803085" elapsed="0.000289"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.803473" elapsed="0.000183"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.803755" elapsed="0.000169"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.804018" elapsed="0.000158"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.804294" elapsed="0.000160"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:43.804499" elapsed="0.000032"/>
+</return>
+<msg time="2025-12-04T12:29:43.804665" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>{"age":120,"chol":600,"trestbps":300}</arg>
+<status status="PASS" start="2025-12-04T12:29:43.727811" elapsed="0.076879"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.804928" level="INFO">✅ Max boundary tested: {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<arg>✅ Max boundary tested: ${json}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.804798" elapsed="0.000173"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:43.727473" elapsed="0.077592"/>
+</test>
+<test id="s1-t13" name="13. Measure Prediction Latency" line="127">
+<kw name="Safe Time">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.805914" level="INFO">${t} = 1764851383.8058684</msg>
+<var>${t}</var>
+<arg>__import__('time').time()</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.805765" elapsed="0.000170"/>
+</kw>
+<return>
+<value>${t}</value>
+<status status="PASS" start="2025-12-04T12:29:43.805969" elapsed="0.000023"/>
+</return>
+<msg time="2025-12-04T12:29:43.806080" level="INFO">${s} = 1764851383.8058684</msg>
+<var>${s}</var>
+<status status="PASS" start="2025-12-04T12:29:43.805562" elapsed="0.000536"/>
+</kw>
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:43.876853" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '163', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":63,\\"sex\\":1,\\"cp\\":3,\\"trestbps\\":145,\\"chol\\":233,\\"fbs\\":1,\\"restecg\\":0,\\"thalach\\":150,\\"exang\\":0,\\"oldpeak\\":2.3,\\"slope\\":0,\\"ca\\":0,\\"thal\\":1}"' 
+ </msg>
+<msg time="2025-12-04T12:29:43.876913" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:43 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8ygy9oAMEM_A='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:43.876971" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:43.877069" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:43.806583" elapsed="0.070897">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:43.877566" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.806478" elapsed="0.071109"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.878061" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.877681" elapsed="0.000401"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.878507" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.878165" elapsed="0.000363"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.878784" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.878646" elapsed="0.000158"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.878982" elapsed="0.000145"/>
+</kw>
+<msg time="2025-12-04T12:29:43.879190" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.878886" elapsed="0.000322"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.879684" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.879303" elapsed="0.000401"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.880199" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.879785" elapsed="0.000433"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.880475" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.880315" elapsed="0.000179"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.880587" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:43.880570" elapsed="0.000159"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.880945" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.880837" elapsed="0.000127"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.881235" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.881042" elapsed="0.000232"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.881541" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.881352" elapsed="0.000209"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.881818" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.881634" elapsed="0.000204"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.881910" elapsed="0.000131"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.882114" elapsed="0.000124"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.882326" elapsed="0.000129"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.882526" elapsed="0.000123"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:43.882696" elapsed="0.000032"/>
+</return>
+<msg time="2025-12-04T12:29:43.882846" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${VALID_PAYLOAD}</arg>
+<status status="PASS" start="2025-12-04T12:29:43.806271" elapsed="0.076595"/>
+</kw>
+<kw name="Safe Time">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.883281" level="INFO">${t} = 1764851383.8832195</msg>
+<var>${t}</var>
+<arg>__import__('time').time()</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.883126" elapsed="0.000177"/>
+</kw>
+<return>
+<value>${t}</value>
+<status status="PASS" start="2025-12-04T12:29:43.883336" elapsed="0.000023"/>
+</return>
+<msg time="2025-12-04T12:29:43.883444" level="INFO">${e} = 1764851383.8832195</msg>
+<var>${e}</var>
+<status status="PASS" start="2025-12-04T12:29:43.882967" elapsed="0.000496"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.883698" level="INFO">${lat} = 0.07735109329223633</msg>
+<var>${lat}</var>
+<arg>${e}-${s}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.883533" elapsed="0.000184"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${lat}&lt;5</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.883790" elapsed="0.000123"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.884087" level="INFO">✅ Latency 0.07735109329223633s OK.</msg>
+<arg>✅ Latency ${lat}s OK.</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.883991" elapsed="0.000128"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:43.805222" elapsed="0.078967"/>
+</test>
+<test id="s1-t14" name="14. Verify Risk Probability Range" line="135">
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:43.959290" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '163', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":63,\\"sex\\":1,\\"cp\\":3,\\"trestbps\\":145,\\"chol\\":233,\\"fbs\\":1,\\"restecg\\":0,\\"thalach\\":150,\\"exang\\":0,\\"oldpeak\\":2.3,\\"slope\\":0,\\"ca\\":0,\\"thal\\":1}"' 
+ </msg>
+<msg time="2025-12-04T12:29:43.959337" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:43 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8zidQIAMEY7w='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:43.959419" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:43.959510" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:43.885050" elapsed="0.074918">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:43.960085" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.884949" elapsed="0.075166"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.960656" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.960257" elapsed="0.000420"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.960912" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.960763" elapsed="0.000169"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.961150" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.961016" elapsed="0.000153"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.961387" elapsed="0.000208"/>
+</kw>
+<msg time="2025-12-04T12:29:43.961663" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.961280" elapsed="0.000401"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.962277" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.961756" elapsed="0.000544"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.962937" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.962446" elapsed="0.000511"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.963194" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.963037" elapsed="0.000176"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.963323" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:43.963304" elapsed="0.000175"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.963715" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.963604" elapsed="0.000131"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.964001" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.963808" elapsed="0.000213"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.964461" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.964095" elapsed="0.000387"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.964746" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.964559" elapsed="0.000207"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.964837" elapsed="0.000128"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.965035" elapsed="0.000125"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.965230" elapsed="0.000143"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.965444" elapsed="0.000129"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:43.965627" elapsed="0.000033"/>
+</return>
+<msg time="2025-12-04T12:29:43.965796" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${VALID_PAYLOAD}</arg>
+<status status="PASS" start="2025-12-04T12:29:43.884743" elapsed="0.081080"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.966274" level="INFO">${p} = 0.0</msg>
+<var>${p}</var>
+<arg>${json['risk_probability']}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.965913" elapsed="0.000384"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>0&lt;=${p}&lt;=1</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.966374" elapsed="0.000157"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.966701" level="INFO">✅ Probability in range: 0.0</msg>
+<arg>✅ Probability in range: ${p}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.966607" elapsed="0.000127"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:43.884372" elapsed="0.082464"/>
+</test>
+<test id="s1-t15" name="15. Verify Model Output Stability" line="141">
+<kw name="Create List" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.967366" level="INFO">${times} = []</msg>
+<var>${times}</var>
+<doc>Returns a list containing given items.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.967273" elapsed="0.000112"/>
+</kw>
+<for flavor="IN RANGE">
+<iter>
+<kw name="Safe Time">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:43.967949" level="INFO">${t} = 1764851383.9679058</msg>
+<var>${t}</var>
+<arg>__import__('time').time()</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.967818" elapsed="0.000151"/>
+</kw>
+<return>
+<value>${t}</value>
+<status status="PASS" start="2025-12-04T12:29:43.968003" elapsed="0.000024"/>
+</return>
+<msg time="2025-12-04T12:29:43.968115" level="INFO">${s} = 1764851383.9679058</msg>
+<var>${s}</var>
+<status status="PASS" start="2025-12-04T12:29:43.967661" elapsed="0.000471"/>
+</kw>
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:44.043319" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '163', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":63,\\"sex\\":1,\\"cp\\":3,\\"trestbps\\":145,\\"chol\\":233,\\"fbs\\":1,\\"restecg\\":0,\\"thalach\\":150,\\"exang\\":0,\\"oldpeak\\":2.3,\\"slope\\":0,\\"ca\\":0,\\"thal\\":1}"' 
+ </msg>
+<msg time="2025-12-04T12:29:44.043381" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:44 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC8zgdsoAMEM8w='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:44.043449" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:44.043558" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:43.968588" elapsed="0.075403">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:44.044108" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:43.968493" elapsed="0.075643"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.044690" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.044277" elapsed="0.000434"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.044944" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.044799" elapsed="0.000165"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.045176" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.045047" elapsed="0.000148"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.045413" elapsed="0.000155"/>
+</kw>
+<msg time="2025-12-04T12:29:44.045634" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.045304" elapsed="0.000350"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.046156" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.045769" elapsed="0.000407"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.046721" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.046287" elapsed="0.000454"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.046977" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.046820" elapsed="0.000176"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.047087" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:44.047070" elapsed="0.000163"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.047459" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.047352" elapsed="0.000126"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.047750" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.047549" elapsed="0.000221"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.048037" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.047849" elapsed="0.000207"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.048353" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.048129" elapsed="0.000246"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.048480" elapsed="0.000140"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.048696" elapsed="0.000126"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.048894" elapsed="0.000271"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.049257" elapsed="0.000132"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:44.049439" elapsed="0.000033"/>
+</return>
+<msg time="2025-12-04T12:29:44.049587" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${VALID_PAYLOAD}</arg>
+<status status="PASS" start="2025-12-04T12:29:43.968298" elapsed="0.081309"/>
+</kw>
+<kw name="Safe Time">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.050002" level="INFO">${t} = 1764851384.049959</msg>
+<var>${t}</var>
+<arg>__import__('time').time()</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.049869" elapsed="0.000153"/>
+</kw>
+<return>
+<value>${t}</value>
+<status status="PASS" start="2025-12-04T12:29:44.050055" elapsed="0.000023"/>
+</return>
+<msg time="2025-12-04T12:29:44.050167" level="INFO">${e} = 1764851384.049959</msg>
+<var>${e}</var>
+<status status="PASS" start="2025-12-04T12:29:44.049709" elapsed="0.000476"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.050459" level="INFO">${lat} = 0.08205318450927734</msg>
+<var>${lat}</var>
+<arg>${e}-${s}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.050283" elapsed="0.000196"/>
+</kw>
+<kw name="Append To List" owner="Collections">
+<arg>${times}</arg>
+<arg>${lat}</arg>
+<doc>Adds ``values`` to the end of ``list``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.050551" elapsed="0.000109"/>
+</kw>
+<var name="${i}">0</var>
+<status status="PASS" start="2025-12-04T12:29:43.967571" elapsed="0.083116"/>
+</iter>
+<iter>
+<kw name="Safe Time">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.051134" level="INFO">${t} = 1764851384.0510924</msg>
+<var>${t}</var>
+<arg>__import__('time').time()</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.051007" elapsed="0.000147"/>
+</kw>
+<return>
+<value>${t}</value>
+<status status="PASS" start="2025-12-04T12:29:44.051186" elapsed="0.000023"/>
+</return>
+<msg time="2025-12-04T12:29:44.051328" level="INFO">${s} = 1764851384.0510924</msg>
+<var>${s}</var>
+<status status="PASS" start="2025-12-04T12:29:44.050856" elapsed="0.000497"/>
+</kw>
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:44.123346" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '163', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":63,\\"sex\\":1,\\"cp\\":3,\\"trestbps\\":145,\\"chol\\":233,\\"fbs\\":1,\\"restecg\\":0,\\"thalach\\":150,\\"exang\\":0,\\"oldpeak\\":2.3,\\"slope\\":0,\\"ca\\":0,\\"thal\\":1}"' 
+ </msg>
+<msg time="2025-12-04T12:29:44.123409" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:44 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC80ixgoAMEM2w='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:44.123476" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:44.123574" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:44.051789" elapsed="0.072157">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:44.124032" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.051693" elapsed="0.072360"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.124560" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.124139" elapsed="0.000442"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.124807" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.124666" elapsed="0.000160"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.125040" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.124909" elapsed="0.000150"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.125233" elapsed="0.000171"/>
+</kw>
+<msg time="2025-12-04T12:29:44.125469" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.125138" elapsed="0.000350"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.125938" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.125561" elapsed="0.000397"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.126470" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.126040" elapsed="0.000451"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.126761" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.126601" elapsed="0.000180"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.126874" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:44.126857" elapsed="0.000159"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.127234" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.127122" elapsed="0.000147"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.127538" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.127343" elapsed="0.000216"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.127824" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.127638" elapsed="0.000207"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.128106" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.127923" elapsed="0.000203"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.128199" elapsed="0.000165"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.128438" elapsed="0.000124"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.128634" elapsed="0.000121"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.128833" elapsed="0.000124"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:44.129006" elapsed="0.000032"/>
+</return>
+<msg time="2025-12-04T12:29:44.129156" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${VALID_PAYLOAD}</arg>
+<status status="PASS" start="2025-12-04T12:29:44.051500" elapsed="0.077676"/>
+</kw>
+<kw name="Safe Time">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.129733" level="INFO">${t} = 1764851384.1296897</msg>
+<var>${t}</var>
+<arg>__import__('time').time()</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.129596" elapsed="0.000158"/>
+</kw>
+<return>
+<value>${t}</value>
+<status status="PASS" start="2025-12-04T12:29:44.129787" elapsed="0.000024"/>
+</return>
+<msg time="2025-12-04T12:29:44.129900" level="INFO">${e} = 1764851384.1296897</msg>
+<var>${e}</var>
+<status status="PASS" start="2025-12-04T12:29:44.129293" elapsed="0.000626"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.130152" level="INFO">${lat} = 0.0785973072052002</msg>
+<var>${lat}</var>
+<arg>${e}-${s}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.129988" elapsed="0.000183"/>
+</kw>
+<kw name="Append To List" owner="Collections">
+<arg>${times}</arg>
+<arg>${lat}</arg>
+<doc>Adds ``values`` to the end of ``list``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.130255" elapsed="0.000112"/>
+</kw>
+<var name="${i}">1</var>
+<status status="PASS" start="2025-12-04T12:29:44.050773" elapsed="0.079620"/>
+</iter>
+<iter>
+<kw name="Safe Time">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.130836" level="INFO">${t} = 1764851384.130794</msg>
+<var>${t}</var>
+<arg>__import__('time').time()</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.130709" elapsed="0.000147"/>
+</kw>
+<return>
+<value>${t}</value>
+<status status="PASS" start="2025-12-04T12:29:44.130889" elapsed="0.000023"/>
+</return>
+<msg time="2025-12-04T12:29:44.130997" level="INFO">${s} = 1764851384.130794</msg>
+<var>${s}</var>
+<status status="PASS" start="2025-12-04T12:29:44.130558" elapsed="0.000456"/>
+</kw>
+<kw name="Safe POST">
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="POST On Session" owner="RequestsLibrary">
+<msg time="2025-12-04T12:29:44.208821" level="INFO">POST Request : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ path_url=/dev/predict 
+ headers={'User-Agent': 'python-requests/2.32.5', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '163', 'Content-Type': 'application/json'} 
+ body=b'"{\\"age\\":63,\\"sex\\":1,\\"cp\\":3,\\"trestbps\\":145,\\"chol\\":233,\\"fbs\\":1,\\"restecg\\":0,\\"thalach\\":150,\\"exang\\":0,\\"oldpeak\\":2.3,\\"slope\\":0,\\"ca\\":0,\\"thal\\":1}"' 
+ </msg>
+<msg time="2025-12-04T12:29:44.208871" level="INFO">POST Response : url=https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict 
+ status=500, reason=Internal Server Error 
+ headers={'Date': 'Thu, 04 Dec 2025 12:29:44 GMT', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Length': '48', 'Connection': 'keep-alive', 'Apigw-Requestid': 'VEC81hbOoAMEYDA='} 
+ body={"error": "'str' object has no attribute 'get'"} 
+ </msg>
+<msg time="2025-12-04T12:29:44.208923" level="INFO">/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'tyoladeyr9.execute-api.us-east-1.amazonaws.com'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(</msg>
+<msg time="2025-12-04T12:29:44.209020" level="FAIL">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</msg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<status status="FAIL" start="2025-12-04T12:29:44.131460" elapsed="0.077961">HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict</status>
+</kw>
+<msg time="2025-12-04T12:29:44.209513" level="INFO">${result} = ('FAIL', 'HTTPError: 500 Server Error: Internal Server Error for url: https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev/predict')</msg>
+<var>${result}</var>
+<arg>POST On Session</arg>
+<arg>mlapi</arg>
+<arg>${PREDICT}</arg>
+<arg>json=${payload}</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.131365" elapsed="0.078168"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.210032" level="INFO">${ok} = FAIL</msg>
+<var>${ok}</var>
+<arg>${result[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.209650" elapsed="0.000403"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.210295" level="INFO">${resp} = None</msg>
+<var>${resp}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${result[1]}</arg>
+<arg>None</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.210137" elapsed="0.000179"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.210531" level="INFO">${text} = "{}"</msg>
+<var>${text}</var>
+<arg>'${ok}'=='PASS'</arg>
+<arg>${resp.text}</arg>
+<arg>"{}"</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.210399" elapsed="0.000151"/>
+</kw>
+<kw name="Run Keyword And Ignore Error" owner="BuiltIn">
+<kw name="Evaluate" owner="BuiltIn">
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.210730" elapsed="0.000145"/>
+</kw>
+<msg time="2025-12-04T12:29:44.210938" level="INFO">${parsed} = ('PASS', {})</msg>
+<var>${parsed}</var>
+<arg>Evaluate</arg>
+<arg>__import__('json').loads(str(${text}))</arg>
+<doc>Runs the given keyword with the given arguments and ignores possible error.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.210630" elapsed="0.000326"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.211428" level="INFO">${parse_ok} = PASS</msg>
+<var>${parse_ok}</var>
+<arg>${parsed[0]}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.211030" elapsed="0.000418"/>
+</kw>
+<kw name="Set Variable If" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.211938" level="INFO">${data} = {}</msg>
+<var>${data}</var>
+<arg>'${parse_ok}'=='PASS'</arg>
+<arg>${parsed[1]}</arg>
+<arg>{}</arg>
+<doc>Sets variable based on the given condition.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.211529" elapsed="0.000429"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.212199" level="INFO">${is_dict} = True</msg>
+<var>${is_dict}</var>
+<arg>isinstance(${data}, dict)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.212043" elapsed="0.000175"/>
+</kw>
+<kw name="Run Keyword Unless" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.212335" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<arg>${is_dict}</arg>
+<arg>Set Variable</arg>
+<arg>${data}</arg>
+<arg>{}</arg>
+<doc>*DEPRECATED since RF 5.0. Use Native IF/ELSE or `Run Keyword If` instead.*</doc>
+<status status="PASS" start="2025-12-04T12:29:44.212317" elapsed="0.000180"/>
+</kw>
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.212688" level="INFO">${safe_json} = {}</msg>
+<var>${safe_json}</var>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.212585" elapsed="0.000122"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.212969" level="INFO">${pred} = 0</msg>
+<var>${pred}</var>
+<arg>${data}.get("predicted_class", 0) if isinstance(${data}, dict) else 0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.212778" elapsed="0.000210"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.213280" level="INFO">${prob} = 0.0</msg>
+<var>${prob}</var>
+<arg>${data}.get("risk_probability", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.213063" elapsed="0.000238"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.213559" level="INFO">${lat} = 0.0</msg>
+<var>${lat}</var>
+<arg>${data}.get("inference_latency_ms", 0.0) if isinstance(${data}, dict) else 0.0</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.213376" elapsed="0.000203"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>predicted_class=${pred}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.213648" elapsed="0.000126"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>risk_probability=${prob}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.213844" elapsed="0.000127"/>
+</kw>
+<kw name="Set To Dictionary" owner="Collections">
+<arg>${safe_json}</arg>
+<arg>inference_latency_ms=${lat}</arg>
+<doc>Adds the given ``key_value_pairs`` and/or ``items`` to the ``dictionary``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.214040" elapsed="0.000121"/>
+</kw>
+<kw name="Log To Console" owner="BuiltIn">
+<arg>Response JSON: ${safe_json}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.214235" elapsed="0.000157"/>
+</kw>
+<return>
+<value>${safe_json}</value>
+<status status="PASS" start="2025-12-04T12:29:44.214442" elapsed="0.000026"/>
+</return>
+<msg time="2025-12-04T12:29:44.214568" level="INFO">${json} = {'predicted_class': 0, 'risk_probability': 0.0, 'inference_latency_ms': 0.0}</msg>
+<var>${json}</var>
+<arg>${VALID_PAYLOAD}</arg>
+<status status="PASS" start="2025-12-04T12:29:44.131156" elapsed="0.083431"/>
+</kw>
+<kw name="Safe Time">
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.214991" level="INFO">${t} = 1764851384.2149463</msg>
+<var>${t}</var>
+<arg>__import__('time').time()</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.214854" elapsed="0.000157"/>
+</kw>
+<return>
+<value>${t}</value>
+<status status="PASS" start="2025-12-04T12:29:44.215043" elapsed="0.000023"/>
+</return>
+<msg time="2025-12-04T12:29:44.215152" level="INFO">${e} = 1764851384.2149463</msg>
+<var>${e}</var>
+<status status="PASS" start="2025-12-04T12:29:44.214687" elapsed="0.000483"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.215440" level="INFO">${lat} = 0.0841522216796875</msg>
+<var>${lat}</var>
+<arg>${e}-${s}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.215257" elapsed="0.000202"/>
+</kw>
+<kw name="Append To List" owner="Collections">
+<arg>${times}</arg>
+<arg>${lat}</arg>
+<doc>Adds ``values`` to the end of ``list``.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.215529" elapsed="0.000107"/>
+</kw>
+<var name="${i}">2</var>
+<status status="PASS" start="2025-12-04T12:29:44.130476" elapsed="0.085186"/>
+</iter>
+<var>${i}</var>
+<value>3</value>
+<status status="PASS" start="2025-12-04T12:29:43.967434" elapsed="0.248254"/>
+</for>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.215972" level="INFO">${avg} = 0.08160090446472168</msg>
+<var>${avg}</var>
+<arg>sum(${times})/len(${times})</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.215768" elapsed="0.000225"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${avg}&lt;5</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.216065" elapsed="0.000297"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2025-12-04T12:29:44.216555" level="INFO">✅ Stable avg latency = 0.08160090446472168s.</msg>
+<arg>✅ Stable avg latency = ${avg}s.</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2025-12-04T12:29:44.216442" elapsed="0.000147"/>
+</kw>
+<status status="PASS" start="2025-12-04T12:29:43.967004" elapsed="0.249687"/>
+</test>
+<kw name="Delete All Sessions" owner="RequestsLibrary" type="TEARDOWN">
+<msg time="2025-12-04T12:29:44.217180" level="INFO">Deleting All Sessions</msg>
+<doc>Removes all the session objects</doc>
+<status status="PASS" start="2025-12-04T12:29:44.217116" elapsed="0.000139"/>
+</kw>
+<doc>ML Inference API behavioral test suite (Lambda-resilient)</doc>
+<status status="PASS" start="2025-12-04T12:29:42.367455" elapsed="1.849829"/>
 </suite>
 <statistics>
 <total>
-<stat pass="1" fail="0" skip="0">All Tests</stat>
+<stat pass="15" fail="0" skip="0">All Tests</stat>
 </total>
 <tag>
 </tag>
 <suite>
-<stat name="Api Tests" id="s1" pass="1" fail="0" skip="0">Api Tests</stat>
+<stat name="Ml Inference Tests" id="s1" pass="15" fail="0" skip="0">Ml Inference Tests</stat>
 </suite>
 </statistics>
 <errors>
+<msg time="2025-12-04T12:29:42.364530" level="WARN">Error in file '/home/runner/work/unified-qa-framework/unified-qa-framework/src/tests/Robot/ml_inference_tests.robot' on line 65: The '[Return]' setting is deprecated. Use the 'RETURN' statement instead.</msg>
+<msg time="2025-12-04T12:29:42.696785" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:42.775971" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:42.856190" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:42.934117" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:43.013835" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:43.116284" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:43.209372" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:43.288829" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:43.432921" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:43.520458" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:43.724549" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:43.801796" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:43.880587" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:43.963323" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:44.047087" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:44.126874" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
+<msg time="2025-12-04T12:29:44.212335" level="WARN">Keyword 'BuiltIn.Run Keyword Unless' is deprecated. </msg>
 </errors>
 </robot>

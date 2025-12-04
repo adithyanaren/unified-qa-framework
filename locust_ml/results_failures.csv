@@ -1,2 +1,0 @@
-Method,Name,Error,Occurrences
-GET,/dev/dev/health,CatchResponseError('Health check failed: 404'),372
