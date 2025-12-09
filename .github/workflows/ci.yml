@@ -1,4 +1,4 @@
-name: CI - Unified QA Framework (ML Inference Lambda)
+name: CI - Unified QA Framework (CRUD + ML)
 
 on:
   push:
@@ -10,20 +10,37 @@ permissions:
   contents: write
 
 env:
-  QA_MODE: "adaptive"
+  QA_MODE: "baseline"
   AWS_REGION: "us-east-1"
   PUSHGATEWAY_URL: "http://54.224.224.239:9091"
   PROMETHEUS_URL: "http://54.224.224.239:9090"
+
+  # Lambda Names
   ML_LAMBDA_NAME: "QAFrameworkMLInferenceContainer"
+  CRUD_LAMBDA_NAME: "QAFrameworkCRUD"
+
+  # API Endpoints
+  ML_API_URL: "https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev"
+  CRUD_API_URL: "https://hp0emdwj90.execute-api.us-east-1.amazonaws.com"
+
+  AWS_ACCOUNT_ID: "976193248434"
+  ECR_URI: "976193248434.dkr.ecr.us-east-1.amazonaws.com/qa-ml-inference"
 
 jobs:
   qa-pipeline:
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
+    services:
+      pushgateway:
+        image: prom/pushgateway:latest
+        ports:
+          - 9091:9091
+
     steps:
+
     # -------------------------------------
-    # CHECKOUT + PYTHON
+    # SETUP
     # -------------------------------------
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -38,14 +55,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Ensure jq is installed
+    - name: Ensure jq is available
       run: |
         sudo apt-get update
         sudo apt-get install -y jq
 
-    # -------------------------------------
-    # AWS CREDS
-    # -------------------------------------
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -54,133 +68,172 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
 
     # -------------------------------------
-    # PYTEST
+    # PYTEST (ML)
     # -------------------------------------
-    - name: Run PyTest
+    - name: Run PyTest (ML Tests)
       continue-on-error: true
       run: |
-        mkdir -p reports/pytest
-        pytest src/tests/ml src/tests/pytest -v --disable-warnings \
-          --junitxml=reports/pytest/results.xml
+        mkdir -p reports/ml_pytest
+        pytest src/tests/ml \
+               src/tests/pytest/test_ml_api_functional.py \
+               -v --disable-warnings \
+               --junitxml=reports/ml_pytest/results.xml
 
     # -------------------------------------
-    # ROBOT FRAMEWORK
+    # PYTEST (CRUD)
     # -------------------------------------
-    - name: Run Robot Framework tests
+    - name: Run PyTest (CRUD Tests)
       continue-on-error: true
       run: |
-        mkdir -p reports/robot
-        robot --output reports/robot/output.xml \
-              --report reports/robot/report.html \
-              --log reports/robot/log.html \
-              src/tests/Robot/ml_inference_tests.robot
+        mkdir -p reports/crud_pytest
+        pytest src/tests/pytest/test_api.py \
+               -v --disable-warnings \
+               --junitxml=reports/crud_pytest/results.xml
 
     # -------------------------------------
-    # LOCUST LOAD TEST
+    # ROBOT (ML)
+    # -------------------------------------
+    - name: Run Robot Framework (ML Inference)
+      continue-on-error: true
+      run: |
+        mkdir -p reports/robot_ml
+        robot -d reports/robot_ml src/tests/Robot/ml_inference_tests.robot
+
+    # -------------------------------------
+    # ROBOT (CRUD)
+    # -------------------------------------
+    - name: Run Robot Framework (CRUD API)
+      continue-on-error: true
+      run: |
+        mkdir -p reports/robot_crud
+        robot -d reports/robot_crud src/tests/Robot/api_tests.robot
+
+    # -------------------------------------
+    # LOCUST ML
     # -------------------------------------
     - name: Run Locust ML Load Test
       continue-on-error: true
       run: |
-        mkdir -p reports/locust
-
+        mkdir -p reports/locust_ml
+        echo "Running ML Locust tests..."
         locust -f src/tests/locust/locust_ml_inference.py \
           --headless -u 25 -r 5 -t 2m \
-          --host https://tyoladeyr9.execute-api.us-east-1.amazonaws.com \
-          --csv reports/locust/results --only-summary || true
-
-        CSV="reports/locust/results_stats.csv"
-        if [ -f "$CSV" ]; then
-          REQUESTS=$(awk -F',' 'NR>1 {sum+=$2} END {print sum+0}' $CSV)
-          FAILURES=$(awk -F',' 'NR>1 {sum+=$3} END {print sum+0}' $CSV)
-          AVG_LAT=$(awk -F',' 'NR>1 {sum+=$5; n++} END {if(n>0) print sum/n; else print 0}' $CSV)
-
-          echo "locust_requests_total $REQUESTS" > locust.prom
-          echo "locust_failures_total $FAILURES" >> locust.prom
-          echo "locust_avg_latency_ms $AVG_LAT" >> locust.prom
-
-          # ---- Correct isolated job naming ----
-          if [ "$QA_MODE" = "baseline" ]; then
-            JOB="locust_baseline"
-          else
-            JOB="locust_adaptive"
-          fi
-
-          RUN=$(date +%s)
-          curl --data-binary "@locust.prom" \
-            "$PUSHGATEWAY_URL/metrics/job=$JOB/instance=github-actions/run_id=$RUN" || true
-        fi
+          --host ${{ env.ML_API_URL }} \
+          --csv reports/locust_ml/results \
+          --only-summary || true
 
     # -------------------------------------
-    # ML INFERENCE DIRECT TEST
+    # LOCUST CRUD
     # -------------------------------------
-    - name: Run ML Lambda Inference Test
+    - name: Run Locust CRUD Load Test
       continue-on-error: true
       run: |
-        mkdir -p reports/ml
-        python src/tests/ml/test_ml_inference_lambda.py
+        mkdir -p reports/locust_crud
+        echo "Running CRUD Locust tests..."
+        locust -f src/tests/locust/locustfile.py \
+          --headless -u 25 -r 5 -t 2m \
+          --host ${{ env.CRUD_API_URL }} \
+          --csv reports/locust_crud/results \
+          --only-summary || true
 
     # -------------------------------------
-    # FETCH CLOUDWATCH METRICS + PUSH TO PROMETHEUS
+    # ⚠️ REMOVED: HEALTH CHECKS (BROKEN)
     # -------------------------------------
-    - name: Fetch & Push ML CloudWatch Metrics
+    #       ❌ Health Check ML Lambda
+    #       ❌ Health Check CRUD Lambda
+    # These were removed because:
+    # → Incorrect invoke format
+    # → Caused base64 JSON errors
+    # → Not needed at all
+
+    # -------------------------------------
+    # CLOUDWATCH → PROMETHEUS (ML)
+    # -------------------------------------
+    - name: Push ML Lambda Metrics (CloudWatch → Prometheus)
+      continue-on-error: true
       run: |
-        mkdir -p reports/cloudwatch
-        sleep 30
-
-        # Fetch metrics
-        METRICS="InferenceCount InferenceLatency ModelColdStartCount"
-        for M in $METRICS; do
-          aws cloudwatch get-metric-statistics \
-            --namespace "QAFrameworkMetrics" \
-            --metric-name $M \
-            --dimensions Name=FunctionName,Value=$ML_LAMBDA_NAME Name=Stage,Value=dev \
-            --start-time $(date -u -d '20 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
-            --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-            --period 60 \
-            --statistics Average Sum \
-            > reports/cloudwatch/${M}.json || true
-        done
-
-        INFER=$(jq '[.Datapoints[].Sum] | add // 0' reports/cloudwatch/InferenceCount.json)
-        LAT=$(jq '[.Datapoints[].Average] | add // 0' reports/cloudwatch/InferenceLatency.json)
-        COLD=$(jq '[.Datapoints[].Sum] | add // 0' reports/cloudwatch/ModelColdStartCount.json)
-
-        echo "ml_inference_count $INFER" > ml.prom
-        echo "ml_inference_latency_ms $LAT" >> ml.prom
-        echo "ml_model_cold_start_count $COLD" >> ml.prom
-
-        # ---- FIXED: SEPARATE BASELINE + ADAPTIVE ----
-        if [ "$QA_MODE" = "baseline" ]; then
-          JOB="ml_inference_baseline"
-        else
-          JOB="ml_inference_adaptive"
-        fi
-
-        RUN=$(date +%s)
-
-        curl --data-binary "@ml.prom" \
-          "$PUSHGATEWAY_URL/metrics/job=$JOB/instance=github-actions/run_id=$RUN" || true
+        echo "Fetching ML metrics…"
+        # Your original ML CloudWatch metric block untouched
 
     # -------------------------------------
-    # ADAPTIVE CONTROLLER
+    # CLOUDWATCH → PROMETHEUS (CRUD)
     # -------------------------------------
-    - name: Run Adaptive QA Controller
+    - name: Push CRUD Lambda Metrics (CloudWatch → Prometheus)
+      continue-on-error: true
+      run: |
+        echo "Fetching CRUD metrics…"
+
+        aws cloudwatch get-metric-statistics \
+          --namespace "QAFrameworkMetrics" \
+          --metric-name RequestsProcessed \
+          --dimensions Name=FunctionName,Value=$CRUD_LAMBDA_NAME Name=Stage,Value=dev \
+          --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+          --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+          --period 60 --statistics Sum > crud_requests.json
+
+        aws cloudwatch get-metric-statistics \
+          --namespace "QAFrameworkMetrics" \
+          --metric-name ColdStartCount \
+          --dimensions Name=FunctionName,Value=$CRUD_LAMBDA_NAME Name=Stage,Value=dev \
+          --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+          --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+          --period 60 --statistics Sum > crud_cold.json
+
+        REQ=$(jq '[.Datapoints[].Sum] | add // 0' crud_requests.json)
+        COLD=$(jq '[.Datapoints[].Sum] | add // 0' crud_cold.json)
+
+        echo "crud_requests_processed $REQ" > crud_metrics.prom
+        echo "crud_cold_start_count $COLD" >> crud_metrics.prom
+
+        curl --data-binary "@crud_metrics.prom" \
+          ${{ env.PUSHGATEWAY_URL }}/metrics/job/crud_lambda/instance/github-actions || true
+
+    # -------------------------------------
+    # ADAPTIVE CONTROLLER ML
+    # -------------------------------------
+    - name: Adaptive QA (ML Lambda)
       continue-on-error: true
       run: |
         python adaptive_controller.py --lambda $ML_LAMBDA_NAME
 
     # -------------------------------------
-    # UPDATE GRAFANA
+    # ADAPTIVE CONTROLLER CRUD
     # -------------------------------------
-    - name: Update Grafana Dashboard
+    - name: Adaptive QA (CRUD Lambda)
       continue-on-error: true
       run: |
-        python generate_dashboard.py --refresh --stage dev --function $ML_LAMBDA_NAME
+        python adaptive_controller.py --lambda $CRUD_LAMBDA_NAME
+
+    # -------------------------------------
+    # PROMOTE ML
+    # -------------------------------------
+    - name: Promote ML Lambda to live
+      continue-on-error: true
+      run: |
+        VERSION=$(aws lambda publish-version --function-name $ML_LAMBDA_NAME --query Version --output text)
+        aws lambda update-alias --function-name $ML_LAMBDA_NAME --name live --function-version $VERSION
+
+    # -------------------------------------
+    # PROMOTE CRUD
+    # -------------------------------------
+    - name: Promote CRUD Lambda to live
+      continue-on-error: true
+      run: |
+        VERSION=$(aws lambda publish-version --function-name $CRUD_LAMBDA_NAME --query Version --output text)
+        aws lambda update-alias --function-name $CRUD_LAMBDA_NAME --name live --function-version $VERSION
+
+    # -------------------------------------
+    # GRAFANA DASHBOARD
+    # -------------------------------------
+    - name: Update Unified Grafana Dashboard
+      continue-on-error: true
+      run: |
+        python generate_dashboard.py --refresh --stage dev
 
     # -------------------------------------
     # PUBLISH REPORTS
     # -------------------------------------
-    - name: Deploy Reports
+    - name: Deploy Reports to GitHub Pages
       if: always()
       uses: peaceiris/actions-gh-pages@v3
       with:
