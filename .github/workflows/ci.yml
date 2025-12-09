@@ -10,27 +10,21 @@ permissions:
   contents: write
 
 env:
-  QA_MODE: "adaptive"
+  QA_MODE: "adaptive"        # <- CHANGE TO "baseline" for baseline run
   AWS_REGION: "us-east-1"
   PUSHGATEWAY_URL: "http://54.224.224.239:9091"
   PROMETHEUS_URL: "http://54.224.224.239:9090"
   ML_LAMBDA_NAME: "QAFrameworkMLInferenceContainer"
-  AWS_ACCOUNT_ID: "976193248434"
-  ECR_URI: "976193248434.dkr.ecr.us-east-1.amazonaws.com/qa-ml-inference"
 
 jobs:
   qa-pipeline:
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
-    services:
-      pushgateway:
-        image: prom/pushgateway:latest
-        ports:
-          - 9091:9091
-
     steps:
-    # --- Checkout and Setup --
+    # -------------------------------------
+    # CHECKOUT + PYTHON
+    # -------------------------------------
     - name: Checkout repository
       uses: actions/checkout@v4
 
@@ -44,17 +38,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Ensure jq is available
+    - name: Ensure jq is installed
       run: |
-        if ! command -v jq &> /dev/null; then
-          echo "Installing jq..."
-          sudo apt-get update
-          sudo apt-get install -y jq
-        else
-          echo "jq already available"
-        fi
+        sudo apt-get update
+        sudo apt-get install -y jq
 
-    # --- Configure AWS Credentials ---
+    # -------------------------------------
+    # AWS CREDS
+    # -------------------------------------
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -62,242 +53,134 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    # --- Optional Ngrok Tunnel ---
-    - name: Start ngrok tunnel (optional)
-      continue-on-error: true
-      run: |
-        npm install -g ngrok
-        ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
-        ngrok http 9091 --log=stdout > ngrok.log &
-        sleep 8
-        NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url' || echo "")
-        if [ -z "$NGROK_URL" ] || [ "$NGROK_URL" == "null" ]; then
-          echo "⚠️ Ngrok tunnel not available, using default Pushgateway URL"
-          echo "NGROK_URL=${{ env.PUSHGATEWAY_URL }}" >> $GITHUB_ENV
-        else
-          echo "🌐 Ngrok Tunnel Active: $NGROK_URL"
-          echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
-        fi
-
-    # --- PyTest ---
-    - name: Run PyTest (All ML Tests)
+    # -------------------------------------
+    # PYTEST
+    # -------------------------------------
+    - name: Run PyTest
       continue-on-error: true
       run: |
         mkdir -p reports/pytest
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
-        pytest src/tests/ml src/tests/pytest -v --disable-warnings --junitxml=reports/pytest/results.xml
+        pytest src/tests/ml src/tests/pytest -v --disable-warnings \
+          --junitxml=reports/pytest/results.xml
 
-    # --- Robot Framework ---
-    - name: Run Robot Framework tests (ML Lambda)
+    # -------------------------------------
+    # ROBOT FRAMEWORK
+    # -------------------------------------
+    - name: Run Robot Framework tests
       continue-on-error: true
       run: |
         mkdir -p reports/robot
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
         robot --output reports/robot/output.xml \
               --report reports/robot/report.html \
               --log reports/robot/log.html \
               src/tests/Robot/ml_inference_tests.robot
 
-    # --- Locust Load Test (Baseline vs Adaptive Split Metrics) ---
-    - name: Run Locust ML Inference Load Test (Baseline/Adaptive)
+    # -------------------------------------
+    # LOCUST LOAD TEST
+    # -------------------------------------
+    - name: Run Locust ML Load Test
       continue-on-error: true
       run: |
         mkdir -p reports/locust
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
-
-        echo "🚀 Running Locust test for QA_MODE=$QA_MODE"
 
         locust -f src/tests/locust/locust_ml_inference.py \
-          --headless \
-          -u 25 -r 5 -t 2m \
+          --headless -u 25 -r 5 -t 2m \
           --host https://tyoladeyr9.execute-api.us-east-1.amazonaws.com \
-          --csv reports/locust/results \
-          --only-summary \
-          --exit-code-on-error 0 || true
+          --csv reports/locust/results --only-summary || true
 
-        LOCUST_CSV="reports/locust/results_stats.csv"
+        CSV="reports/locust/results_stats.csv"
+        if [ -f "$CSV" ]; then
+          REQUESTS=$(awk -F',' 'NR>1 {sum+=$2} END {print sum+0}' $CSV)
+          FAILURES=$(awk -F',' 'NR>1 {sum+=$3} END {print sum+0}' $CSV)
+          AVG_LAT=$(awk -F',' 'NR>1 {sum+=$5; n++} END {if(n>0) print sum/n; else print 0}' $CSV)
 
-        if [ -f "$LOCUST_CSV" ]; then
-          REQUESTS=$(awk -F',' 'NR>1 {sum+=$2} END {print sum+0}' $LOCUST_CSV)
-          FAILURES=$(awk -F',' 'NR>1 {sum+=$3} END {print sum+0}' $LOCUST_CSV)
-          AVG_LATENCY=$(awk -F',' 'NR>1 {sum+=$5; n++} END {if(n>0) print sum/n; else print 0}' $LOCUST_CSV)
+          echo "locust_requests_total $REQUESTS" > locust.prom
+          echo "locust_failures_total $FAILURES" >> locust.prom
+          echo "locust_avg_latency_ms $AVG_LAT" >> locust.prom
 
-          echo "locust_requests_total $REQUESTS" > locust_run.prom
-          echo "locust_failures_total $FAILURES" >> locust_run.prom
-          echo "locust_avg_latency_ms $AVG_LATENCY" >> locust_run.prom
-
-          # Select correct job name
+          # ---- Correct isolated job naming ----
           if [ "$QA_MODE" = "baseline" ]; then
-            JOB_NAME="locust_baseline"
+            JOB="locust_baseline"
           else
-            JOB_NAME="locust_adaptive"
+            JOB="locust_adaptive"
           fi
 
-          RUN_ID=$(date +%s)
-
-          echo "📊 Pushing Locust metrics → job=$JOB_NAME run_id=$RUN_ID"
-
-          curl --data-binary "@locust_run.prom" \
-            ${{ env.PUSHGATEWAY_URL }}/metrics/job=${JOB_NAME}/instance=github-actions/run_id=${RUN_ID} || true
-
-        else
-          echo "⚠️ No Locust CSV found — skipping metric push"
+          RUN=$(date +%s)
+          curl --data-binary "@locust.prom" \
+            "$PUSHGATEWAY_URL/metrics/job=$JOB/instance=github-actions/run_id=$RUN" || true
         fi
 
-
-    # --- ML Lambda Inference Test ---
+    # -------------------------------------
+    # ML INFERENCE DIRECT TEST
+    # -------------------------------------
     - name: Run ML Lambda Inference Test
       continue-on-error: true
       run: |
         mkdir -p reports/ml
         python src/tests/ml/test_ml_inference_lambda.py
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-    # --- Redeploy (Existing ECR Image) ---
-    - name: Redeploy Existing ML Inference Lambda Image
-      run: |
-        echo "🚀 Redeploying existing ML container image..."
-        aws lambda update-function-code \
-          --function-name ${{ env.ML_LAMBDA_NAME }} \
-          --image-uri 976193248434.dkr.ecr.us-east-1.amazonaws.com/qaframework-ml-inference:v2
-        echo "✅ Existing ECR image successfully redeployed to Lambda"
-
-    # --- Wait for Lambda to Stabilize ---
-    - name: Wait for Lambda update to complete
-      run: |
-        echo "⏳ Waiting for Lambda deployment to stabilize..."
-        for i in {1..5}; do
-          aws lambda wait function-updated --function-name ${{ env.ML_LAMBDA_NAME }} && break
-          echo "Retrying Lambda wait..."; sleep 15
-        done
-# --- Verify Lambda Health (Post-Deployment) ---
-    - name: Verify Lambda Health (Post-Deployment)
-      run: |
-        echo "🚀 Invoking deployed ML inference Lambda..."
-        aws lambda invoke \
-          --function-name ${{ env.ML_LAMBDA_NAME }} \
-          --cli-binary-format raw-in-base64-out \
-          --payload '{"path":"/health"}' \
-          response.json \
-          --region ${{ env.AWS_REGION }}
-    
-        echo "Lambda Response:"
-        cat response.json
-    
-        STATUS=$(cat response.json | jq -r '.statusCode')
-        if [ "$STATUS" -ne 200 ]; then
-          echo "❌ Lambda health check failed! Response code: $STATUS"
-          exit 1
-        else
-          echo "✅ Lambda health check passed successfully!"
-        fi
-
-    # --- Health Check ---
-    - name: Health check Lambda alias
-      run: |
-        echo "Invoking $ML_LAMBDA_NAME:dev..."
-        aws lambda invoke \
-          --function-name $ML_LAMBDA_NAME:dev \
-          --cli-binary-format raw-in-base64-out \
-          --payload '{"ping":"test"}' response.json || true
-        cat response.json || echo "⚠️ Health check failed but continuing"
-
-    # --- Force Cold Start ---
-    - name: Force Cold Start
-      continue-on-error: true
-      run: |
-        for i in {1..3}; do
-          aws lambda update-function-configuration \
-            --function-name $ML_LAMBDA_NAME \
-            --environment "Variables={DUMMY=$(date +%s)}" && break || sleep 10
-        done
-        aws lambda wait function-updated --function-name $ML_LAMBDA_NAME
-
-    - name: Fetch and Push CloudWatch Metrics
+    # -------------------------------------
+    # FETCH CLOUDWATCH METRICS + PUSH TO PROMETHEUS
+    # -------------------------------------
+    - name: Fetch & Push ML CloudWatch Metrics
       run: |
         mkdir -p reports/cloudwatch
-        echo "🕒 Waiting 45s for CloudWatch metrics to update..."
-        sleep 45
+        sleep 30
 
-        for METRIC in InferenceCount InferenceLatency ModelColdStartCount; do
-          echo "Fetching $METRIC..."
-          if [ "$METRIC" == "InferenceLatency" ]; then
-            STAT="Average"
-          else
-            STAT="Sum"
-          fi
-
+        # Fetch metrics
+        METRICS="InferenceCount InferenceLatency ModelColdStartCount"
+        for M in $METRICS; do
           aws cloudwatch get-metric-statistics \
             --namespace "QAFrameworkMetrics" \
-            --metric-name $METRIC \
+            --metric-name $M \
             --dimensions Name=FunctionName,Value=$ML_LAMBDA_NAME Name=Stage,Value=dev \
-            --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --start-time $(date -u -d '20 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
             --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-            --period 60 --statistics $STAT > reports/cloudwatch/${METRIC}.json || true
+            --period 60 \
+            --statistics Average Sum \
+            > reports/cloudwatch/${M}.json || true
         done
 
-        INFER=$(jq '[.Datapoints[].Sum] | add // 0' reports/cloudwatch/InferenceCount.json || echo 0)
-        LATENCY=$(jq '[.Datapoints[].Average] | add // 0' reports/cloudwatch/InferenceLatency.json || echo 0)
-        COLD=$(jq '[.Datapoints[].Sum] | add // 0' reports/cloudwatch/ModelColdStartCount.json || echo 0)
-    
-        echo "ml_inference_count{mode=\"${QA_MODE}\"} $INFER" > ml_lambda.prom
-        echo "ml_inference_latency_ms{mode=\"${QA_MODE}\"} $LATENCY" >> ml_lambda.prom
-        echo "ml_model_cold_start_count{mode=\"${QA_MODE}\"} $COLD" >> ml_lambda.prom
+        INFER=$(jq '[.Datapoints[].Sum] | add // 0' reports/cloudwatch/InferenceCount.json)
+        LAT=$(jq '[.Datapoints[].Average] | add // 0' reports/cloudwatch/InferenceLatency.json)
+        COLD=$(jq '[.Datapoints[].Sum] | add // 0' reports/cloudwatch/ModelColdStartCount.json)
 
-    
-        curl --data-binary "@ml_lambda.prom" ${{ env.PUSHGATEWAY_URL }}/metrics/job/ml_lambda/instance/github-actions || true
-        echo "✅ ML CloudWatch metrics pushed to Prometheus"
+        echo "ml_inference_count $INFER" > ml.prom
+        echo "ml_inference_latency_ms $LAT" >> ml.prom
+        echo "ml_model_cold_start_count $COLD" >> ml.prom
 
+        # ---- FIXED: SEPARATE BASELINE + ADAPTIVE ----
+        if [ "$QA_MODE" = "baseline" ]; then
+          JOB="ml_inference_baseline"
+        else
+          JOB="ml_inference_adaptive"
+        fi
 
-    # --- Run Adaptive QA Controller ---
+        RUN=$(date +%s)
+
+        curl --data-binary "@ml.prom" \
+          "$PUSHGATEWAY_URL/metrics/job=$JOB/instance=github-actions/run_id=$RUN" || true
+
+    # -------------------------------------
+    # ADAPTIVE CONTROLLER
+    # -------------------------------------
     - name: Run Adaptive QA Controller
-      timeout-minutes: 3
       continue-on-error: true
       run: |
-        python adaptive_controller.py --lambda $ML_LAMBDA_NAME || echo "⚠️ Adaptive controller encountered issue but pipeline will continue"
-      env:
-        PROMETHEUS_URL: ${{ env.PROMETHEUS_URL }}
-        PUSHGATEWAY_URL: ${{ env.PUSHGATEWAY_URL }}
-        AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
+        python adaptive_controller.py --lambda $ML_LAMBDA_NAME
 
-#    # --- OWASP ZAP Baseline Security Scan ---
-#    - name: OWASP ZAP Baseline Scan (Safe Passive Scan)
-#      uses: zaproxy/action-baseline@v0.7.1
-#      with:
-#        token: ${{ secrets.GITHUB_TOKEN }}
-#        target: "https://tyoladeyr9.execute-api.us-east-1.amazonaws.com/dev"
-#        rules_file_name: .zap/rules.tsv
-#        cmd_options: "-a"
-#      continue-on-error: true
-
-
-    # --- Promote to Live ---
-    - name: Promote to live alias
-      if: success()
-      run: |
-        echo "📦 Publishing new Lambda version..."
-        VERSION=$(aws lambda publish-version --function-name $ML_LAMBDA_NAME --query Version --output text)
-        echo "Promoting version $VERSION to live..."
-        aws lambda update-alias \
-          --function-name $ML_LAMBDA_NAME \
-          --name live \
-          --function-version $VERSION || \
-        aws lambda create-alias \
-          --function-name $ML_LAMBDA_NAME \
-          --name live \
-          --function-version $VERSION
-        echo "✅ Live alias updated"
-
-    # --- Update Grafana Dashboard ---
-    - name: Update Unified Grafana Dashboard
+    # -------------------------------------
+    # UPDATE GRAFANA
+    # -------------------------------------
+    - name: Update Grafana Dashboard
       continue-on-error: true
       run: |
-        python generate_dashboard.py --refresh --stage dev --function $ML_LAMBDA_NAME || echo "⚠️ Grafana update skipped"
+        python generate_dashboard.py --refresh --stage dev --function $ML_LAMBDA_NAME
 
-    # --- Publish Reports --
-    - name: Deploy reports to GitHub Pages
+    # -------------------------------------
+    # PUBLISH REPORTS
+    # -------------------------------------
+    - name: Deploy Reports
       if: always()
       uses: peaceiris/actions-gh-pages@v3
       with:
