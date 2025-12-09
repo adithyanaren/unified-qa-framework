@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  QA_MODE: "adaptive"
+  QA_MODE: "baseline"
   AWS_REGION: "us-east-1"
   PUSHGATEWAY_URL: "http://54.224.224.239:9091"
   PROMETHEUS_URL: "http://54.224.224.239:9090"
@@ -99,13 +99,13 @@ jobs:
               src/tests/Robot/ml_inference_tests.robot
 
     # --- Locust Load Test (Baseline vs Adaptive Split Metrics) ---
-    - name: Run Locust ML Inference Load Test (CI-Safe)
+    - name: Run Locust ML Inference Load Test (Baseline/Adaptive)
       continue-on-error: true
       run: |
         mkdir -p reports/locust
         export PYTHONPATH=$PYTHONPATH:$(pwd)
 
-        echo "🚀 Running Locust ML Inference load tests (mode: $QA_MODE)..."
+        echo "🚀 Running Locust test for QA_MODE=$QA_MODE"
 
         locust -f src/tests/locust/locust_ml_inference.py \
           --headless \
@@ -126,20 +126,24 @@ jobs:
           echo "locust_failures_total $FAILURES" >> locust_run.prom
           echo "locust_avg_latency_ms $AVG_LATENCY" >> locust_run.prom
 
+          # Select correct job name
           if [ "$QA_MODE" = "baseline" ]; then
             JOB_NAME="locust_baseline"
           else
             JOB_NAME="locust_adaptive"
           fi
 
-          echo "📊 Pushing Locust metrics to job=$JOB_NAME..."
-          curl --data-binary "@locust_run.prom" \
-            ${{ env.PUSHGATEWAY_URL }}/metrics/job/${JOB_NAME}/instance/github-actions || true
+          RUN_ID=$(date +%s)
 
-          echo "📈 Metrics pushed: req=$REQUESTS fail=$FAILURES avgLatency=$AVG_LATENCY"
+          echo "📊 Pushing Locust metrics → job=$JOB_NAME run_id=$RUN_ID"
+
+          curl --data-binary "@locust_run.prom" \
+            ${{ env.PUSHGATEWAY_URL }}/metrics/job=${JOB_NAME}/instance=github-actions/run_id=${RUN_ID} || true
+
         else
-          echo "⚠️ Locust CSV not found; skipping metric push."
+          echo "⚠️ No Locust CSV found — skipping metric push"
         fi
+
 
     # --- ML Lambda Inference Test ---
     - name: Run ML Lambda Inference Test
@@ -238,9 +242,10 @@ jobs:
         LATENCY=$(jq '[.Datapoints[].Average] | add // 0' reports/cloudwatch/InferenceLatency.json || echo 0)
         COLD=$(jq '[.Datapoints[].Sum] | add // 0' reports/cloudwatch/ModelColdStartCount.json || echo 0)
     
-        echo "ml_inference_count $INFER" > ml_lambda.prom
-        echo "ml_inference_latency_ms $LATENCY" >> ml_lambda.prom
-        echo "ml_model_cold_start_count $COLD" >> ml_lambda.prom
+        echo "ml_inference_count{mode=\"${QA_MODE}\"} $INFER" > ml_lambda.prom
+        echo "ml_inference_latency_ms{mode=\"${QA_MODE}\"} $LATENCY" >> ml_lambda.prom
+        echo "ml_model_cold_start_count{mode=\"${QA_MODE}\"} $COLD" >> ml_lambda.prom
+
     
         curl --data-binary "@ml_lambda.prom" ${{ env.PUSHGATEWAY_URL }}/metrics/job/ml_lambda/instance/github-actions || true
         echo "✅ ML CloudWatch metrics pushed to Prometheus"
