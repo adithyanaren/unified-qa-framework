@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  QA_MODE: "baseline"
+  QA_MODE: "adaptive"
   AWS_REGION: "us-east-1"
   PUSHGATEWAY_URL: "http://54.224.224.239:9091"
   PROMETHEUS_URL: "http://54.224.224.239:9090"
