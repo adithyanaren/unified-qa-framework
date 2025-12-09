@@ -30,7 +30,7 @@ jobs:
           - 9091:9091
 
     steps:
-    # --- Checkout and Setup ---
+    # --- Checkout and Setup --
     - name: Checkout repository
       uses: actions/checkout@v4
 
