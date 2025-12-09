@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  QA_MODE: "adaptive"
+  QA_MODE: "baseline"
   AWS_REGION: "us-east-1"
   PUSHGATEWAY_URL: "http://54.224.224.239:9091"
   PROMETHEUS_URL: "http://54.224.224.239:9090"
@@ -98,14 +98,15 @@ jobs:
               --log reports/robot/log.html \
               src/tests/Robot/ml_inference_tests.robot
 
-    # --- Locust Load Test ---
+    # --- Locust Load Test (Baseline vs Adaptive Split Metrics) ---
     - name: Run Locust ML Inference Load Test (CI-Safe)
       continue-on-error: true
       run: |
         mkdir -p reports/locust
         export PYTHONPATH=$PYTHONPATH:$(pwd)
-        echo "🚀 Running Locust ML Inference load tests..."
-        
+
+        echo "🚀 Running Locust ML Inference load tests (mode: $QA_MODE)..."
+
         locust -f src/tests/locust/locust_ml_inference.py \
           --headless \
           -u 25 -r 5 -t 2m \
@@ -113,21 +114,28 @@ jobs:
           --csv reports/locust/results \
           --only-summary \
           --exit-code-on-error 0 || true
-        
-        echo "✅ Locust run completed; parsing metrics..."
+
         LOCUST_CSV="reports/locust/results_stats.csv"
+
         if [ -f "$LOCUST_CSV" ]; then
           REQUESTS=$(awk -F',' 'NR>1 {sum+=$2} END {print sum+0}' $LOCUST_CSV)
           FAILURES=$(awk -F',' 'NR>1 {sum+=$3} END {print sum+0}' $LOCUST_CSV)
           AVG_LATENCY=$(awk -F',' 'NR>1 {sum+=$5; n++} END {if(n>0) print sum/n; else print 0}' $LOCUST_CSV)
-          
-          echo "locust_requests_total $REQUESTS" > locust_ml.prom
-          echo "locust_failures_total $FAILURES" >> locust_ml.prom
-          echo "locust_avg_latency_ms $AVG_LATENCY" >> locust_ml.prom
-          
-          curl --data-binary "@locust_ml.prom" \
-            ${{ env.PUSHGATEWAY_URL }}/metrics/job/ml_inference_locust/instance/github-actions || true
-          
+
+          echo "locust_requests_total $REQUESTS" > locust_run.prom
+          echo "locust_failures_total $FAILURES" >> locust_run.prom
+          echo "locust_avg_latency_ms $AVG_LATENCY" >> locust_run.prom
+
+          if [ "$QA_MODE" = "baseline" ]; then
+            JOB_NAME="locust_baseline"
+          else
+            JOB_NAME="locust_adaptive"
+          fi
+
+          echo "📊 Pushing Locust metrics to job=$JOB_NAME..."
+          curl --data-binary "@locust_run.prom" \
+            ${{ env.PUSHGATEWAY_URL }}/metrics/job/${JOB_NAME}/instance/github-actions || true
+
           echo "📈 Metrics pushed: req=$REQUESTS fail=$FAILURES avgLatency=$AVG_LATENCY"
         else
           echo "⚠️ Locust CSV not found; skipping metric push."
