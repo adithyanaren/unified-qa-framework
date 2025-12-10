@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  QA_MODE: "baseline"
+  QA_MODE: "adaptive"
   AWS_REGION: "us-east-1"
   PUSHGATEWAY_URL: "http://54.224.224.239:9091"
   PROMETHEUS_URL: "http://54.224.224.239:9090"
@@ -136,19 +136,6 @@ jobs:
           --csv reports/locust_crud/results \
           --only-summary || true
 
-    # -------------------------------------
-    # ⚠️ REMOVED: HEALTH CHECKS (BROKEN)
-    # -------------------------------------
-    #       ❌ Health Check ML Lambda
-    #       ❌ Health Check CRUD Lambda
-    # These were removed because:
-    # → Incorrect invoke format
-    # → Caused base64 JSON errors
-    # → Not needed at all
-
-    # -------------------------------------
-    # CLOUDWATCH → PROMETHEUS (ML)
-    # -------------------------------------
     - name: Push ML Lambda Metrics (CloudWatch → Prometheus)
       continue-on-error: true
       run: |
